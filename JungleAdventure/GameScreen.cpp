@@ -74,7 +74,7 @@ void GameScreen::process() {
 	}
 }
 void GameScreen::update() {
-	m_world->Step(1.0f/60.0f,8,3);
+	m_world->Step(1.0f / 60.0f, 8, 3);
 	m_camera.change();
 	m_player.update(m_game->getInputManager());
 	m_game->getInputManager()->update();
@@ -82,6 +82,7 @@ void GameScreen::update() {
 void GameScreen::draw() {
 
 	glm::mat4 Projection = m_camera.getcameramatrix();
+
 	//boxes and player render
 	{
 		m_program.use();
@@ -101,7 +102,7 @@ void GameScreen::draw() {
 		for (auto& B : m_boxes) {
 			B.draw(&m_spriteBatch);
 		}
-
+		
 		m_spriteBatch.end();
 		m_spriteBatch.renderBatch();
 
