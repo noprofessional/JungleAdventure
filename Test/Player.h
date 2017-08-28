@@ -15,6 +15,14 @@ public:
 	void tempDraw(Lengine::SpriteBatch* spritebatch);
 	void debugDraw(Lengine::DebugRender* debugrender);
 	void tempDebugDraw(Lengine::DebugRender* debugrender,bool isSelected = false);
+
+	//////////////////////////////////////////////////////////////////////////
+	//getters
+	//////////////////////////////////////////////////////////////////////////
+	const glm::vec2&			getTempPos()const		{ return m_tempPos; }
+	const glm::vec2&			getRenderDim()const		{ return m_renderDim; }
+	const Lengine::ColorRGBA8&	getColor()const			{ return m_color; }
+	const Lengine::GLtexture&	getTexture()const		{ return m_texture; }
 	Capsule& getCapsule(){ return m_capsule; }
 	const Capsule& getConstCapsule() const { return m_capsule; }
 private:

@@ -153,15 +153,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Box.cpp" />
     <ClCompile Include="Capsule.cpp" />
     <ClCompile Include="GameScreen.cpp" />
+    <ClCompile Include="LevelWriterNReader.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MenuScreen.cpp" />
     <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="Box.h" />
     <ClInclude Include="Capsule.h" />
     <ClInclude Include="GameScreen.h" />
+    <ClInclude Include="LevelWriterNReader.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="MenuScreen.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="ScreenIdentifier.h" />
   </ItemGroup>
