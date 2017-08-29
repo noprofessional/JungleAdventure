@@ -155,6 +155,7 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Box.cpp" />
     <ClCompile Include="Capsule.cpp" />
+    <ClCompile Include="EditScreen.cpp" />
     <ClCompile Include="GameScreen.cpp" />
     <ClCompile Include="LevelWriterNReader.cpp" />
     <ClCompile Include="Light.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="App.h" />
     <ClInclude Include="Box.h" />
     <ClInclude Include="Capsule.h" />
+    <ClInclude Include="EditScreen.h" />
     <ClInclude Include="GameScreen.h" />
     <ClInclude Include="LevelWriterNReader.h" />
     <ClInclude Include="Light.h" />

@@ -20,6 +20,7 @@ public:
 	//getters
 	//////////////////////////////////////////////////////////////////////////
 	const glm::vec2&			getTempPos()const		{ return m_tempPos; }
+	glm::vec2&					getTempPosReference()	{ return m_tempPos; }
 	const glm::vec2&			getRenderDim()const		{ return m_renderDim; }
 	const Lengine::ColorRGBA8&	getColor()const			{ return m_color; }
 	const Lengine::GLtexture&	getTexture()const		{ return m_texture; }

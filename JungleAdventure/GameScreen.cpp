@@ -33,7 +33,7 @@ void GameScreen::build() {
 	m_lightBatch.init();
 
 	m_debugRender.init();
-	m_debuging = false;
+	m_debuging = true;
 
 	m_camera.init(WINDOW_WIDTH,WINDOW_HEIGHT);
 	m_camera.setposition(glm::vec2(0.0f,0.0f));

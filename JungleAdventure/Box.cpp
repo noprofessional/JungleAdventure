@@ -38,7 +38,6 @@ void Box::draw(Lengine::SpriteBatch* spritebatch) {
 	const glm::vec4 uvrec(0.0f, 0.0f, dimension.x, dimension.y);
 	
 	spritebatch->draw(posrec, uvrec, texture.ids[0], 1.0f, color,m_body->GetAngle());
-	//spritebatch->draw(glm::vec4(0.0f, 0.0f, 30.0f, 30.0f),uvrec, m_texture.id, 1.0f, Lengine::ColorRGBA8(255, 255, 255, 255));
 
 }
 void Box::debugDraw(Lengine::DebugRender * debugRenderer) {

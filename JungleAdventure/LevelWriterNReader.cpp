@@ -55,12 +55,18 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 	}
 	//version
 	fileOut << TEXT_VERSION<<'\n';
+
+	//temp val for easy use
+	const Lengine::ColorRGBA8* Col;
+
 	//player
-	const Capsule& C = player.getConstCapsule();
-	const Lengine::ColorRGBA8* Col = &player.color;
-	fileOut << C.tempPos.x << ' '<< C.tempPos.y << ' '
-		<< C.dimension.x << ' ' << C.dimension.y << ' '
-		<< player.texture.filePath << '\n';
+	Col= &player.getColor();
+	fileOut << player.getTempPos().x << ' '	<< player.getTempPos().y << ' '
+		<< player.getRenderDim().x << ' '	<< player.getRenderDim().y << ' '
+		<< player.getCollisionDim().x << ' '<< player.getCollisionDim().y << ' '
+		<< player.getPosOffset().x << ' '	<< player.getPosOffset().y << ' '
+		<< player.getTexture().filePath << '\n';
+
 	//boxes
 	fileOut << boxes.size() << '\n';
 	for (auto& B : boxes) {
@@ -72,6 +78,7 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 			<< Col->r << ' ' << Col->g << ' ' << Col->b << ' ' << Col->a << ' '
 			<< B.texture.filePath << '\n';
 	}
+
 	//lights
 	fileOut << lights.size() << '\n';
 	for (auto& L : lights) {
@@ -87,10 +94,16 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 	//player load
 	{
 		glm::vec4 desRec;
+		glm::vec2 collisionDim;
+		glm::vec2 posOffset;
 		Lengine::GLtexture texture;
-		fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w >> texture.filePath;
-		texture = Lengine::ResourceManager::gettexture(texture.filePath);
-		player.tempSetAll(desRec, texture);
+		fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w 
+			>>collisionDim.x>>collisionDim.y>>posOffset.x>>posOffset.y
+			>> texture.filePath;
+		Lengine::TextureCache tempCache;
+		texture = tempCache.gettexture(texture.filePath);
+		std::cout << posOffset.y;
+		player.tempSetAll(desRec, collisionDim,posOffset,texture);
 	}
 	//boxes load
 	{

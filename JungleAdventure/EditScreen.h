@@ -152,9 +152,12 @@ private:
 	int m_currentObjectIndex = -1;
 	std::vector<Light> m_lights;
 	std::vector<Box> m_boxes;
+	Player m_player;
+
 	Box m_tempBox;
 	Player m_tempPlayer;
-	Player m_player;
+	Light m_tempLight;
+
 	bool m_movingObject =false;
 };
 

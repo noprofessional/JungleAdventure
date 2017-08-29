@@ -23,7 +23,7 @@ private:
 	bool wasKEYdown(unsigned int keyID);
 	std::unordered_map<unsigned int, bool> _previouskeyMap;
 	std::unordered_map<unsigned int, bool> _keyMap;
-	glm::ivec2 m_mousePos;
+	glm::vec2 m_mousePos;
 };
 
 }

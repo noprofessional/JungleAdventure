@@ -59,9 +59,7 @@ void MenuScreen::update() {
 	m_game->getInputManager()->update();
 }
 void MenuScreen::draw() {
-	m_game->getWindowPtr()->clean();
 	m_gui.draw();
-	m_game->getWindowPtr()->swapbuffer();
 }
 
 bool MenuScreen::actionEnterGame(const CEGUI::EventArgs& args) {

@@ -1,9 +1,0 @@
-100
--0.28125 -4.375 1.5 2 Textures/traveler.png
-4
--3.1875 -6.3125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/darkwall.png
--2.25 -6.09375 1 1 0 0 ÿ ÿ ÿ ÿ Textures/darkwall.png
--1.25 -5.9375 1 1 0 0 ÿ ÿ ÿ ÿ Textures/darkwall.png
--0.28125 -5.875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/darkwall.png
-1
--2.875 4.78125 10 ÿÿÿÿ

@@ -1,14 +1,17 @@
 #include "EditScreen.h"
-#include"ScreenIdentifier.h"
-#include"LevelWriterNReader.h"
-#include<Lengine/IMainGame.h>
-#include<Lengine/ResourceManager.h>
-#include<iostream>
-#include<Lengine\FileIO.h>
+#include "ScreenIdentifier.h"
+#include "LevelWriterNReader.h"
+#include <Lengine/IMainGame.h>
+#include <Lengine/ResourceManager.h>
+#include <iostream>
+#include <Lengine\FileIO.h>
 
 const float LIGHT_SELECT_RADIUS = 0.5f;
 const Lengine::ColorRGBA8 WHITE(255, 255, 255, 255);
-const glm::vec2 PLAYER_DIM(1.5f, 2.0f);
+const glm::vec2 PLAYER_RENDER_DIM(2.0f, 2.0f);
+const glm::vec2 PLAYER_POS_OFFSET(0.0f, -0.15f);
+const glm::vec2 PLAYER_COLLISOIN_DIM(0.9f, 1.8f);
+
 
 EditScreen::EditScreen(Lengine::IMainGame* ownergame):IScreen(ownergame,EDIT_SCREEN)
 {
@@ -55,7 +58,7 @@ void EditScreen::build()
 	m_world = std::make_unique<b2World>(gravity);
 
 	m_texture = Lengine::ResourceManager::gettexture("Textures/darkwall.png");
-	m_playerTexture = Lengine::ResourceManager::gettexture("Textures/traveler.png");
+	m_playerTexture = Lengine::ResourceManager::gettexture("Textures/spr_m_traveler_idle_anim.gif");
 
 	initUI();
 }
@@ -276,6 +279,7 @@ void EditScreen::destroy()
 	m_gui.destroy();
 	m_program.dispose();
 	m_debugRenderer.destroy();
+	m_spriteFont.dispose();
 }
 
 void EditScreen::process()
@@ -316,7 +320,8 @@ void EditScreen::update()
 				L.size = m_size;
 			}
 			else {
-				moveObject(m_player.getCapsule().tempPos);
+				moveObject(m_player.getTempPosReference());
+				m_player.tempSetAll(glm::vec4(m_player.getTempPos(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
 			}
 		}
 	}
@@ -328,6 +333,112 @@ void EditScreen::draw()
 	drawScreen();
 	drawDebug();
 	drawUI();
+}
+void EditScreen::drawScreen(){
+	glm::mat4 camMatrix = m_camera.getcameramatrix();
+
+	m_program.use();
+	//texture upload
+	glActiveTexture(GL_TEXTURE0);
+	GLint samplerLoc = m_program.getuniformposition("mysampler");
+	glUniform1i(samplerLoc, 0);
+	//camera upload
+	GLint camID = m_program.getuniformposition("P");
+	glUniformMatrix4fv(camID, 1, GL_FALSE, &camMatrix[0][0]);
+	//clear
+	m_spriteBatch.begin();
+	//draw previews of BOX and PLAYER
+	if (m_selectMode == SelectionMode::PLACE && (!isMouseInGroup())) {
+		if (m_objectMode == ObjectMode::PLATFORM) {
+			m_tempBox.tempSetAll(m_desRec, m_angle, m_color, m_texture, m_physicMode);
+			m_tempBox.tempDraw(&m_spriteBatch);
+		}
+		if (m_objectMode == ObjectMode::PLAYER) {
+			m_tempPlayer.tempSetAll(glm::vec4(getMouseWorldCords(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
+			m_tempPlayer.tempDraw(&m_spriteBatch);
+		}
+	}
+	//m_spriteBatch.draw(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),glm::vec4(0.0f,0.0f,1.0f,1.0f),m_texture.id,1.0f, Lengine::ColorRGBA8(255, 255, 255, 255));
+	//draw BOX and PLAYER existed
+	for (int i = 0;i < m_boxes.size();i++) {
+		m_boxes[i].tempDraw(&m_spriteBatch);
+	}
+	if (m_player.getTexture().ids.size() != 0) {
+		//Only draw there is a player 
+		m_player.tempDraw(&m_spriteBatch);
+	}
+	m_spriteBatch.end();
+	m_spriteBatch.renderBatch();
+	m_program.unuse();
+
+	//draw all lights
+	m_lightPro.use();
+	GLint lightCamID = m_lightPro.getuniformposition("P");
+	glUniformMatrix4fv(lightCamID, 1, GL_FALSE, &camMatrix[0][0]);
+	m_lightSprite.begin();
+	//draw preview and lights
+	if (m_selectMode == SelectionMode::PLACE && (!isMouseInGroup())) {
+		if (m_objectMode == ObjectMode::LIGHT) {
+			m_tempLight.tempSetAll( getMouseWorldCords(),m_size,m_color );
+			m_tempLight.draw(&m_lightSprite);
+		}
+	}
+	for (int i = 0;i < m_lights.size();i++) {
+			m_lights[i].draw(&m_lightSprite);
+	}
+	m_lightSprite.end();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	m_lightSprite.renderBatch();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	m_lightPro.unuse();
+}
+void EditScreen::drawDebug() {
+	glm::mat4 camMatrix = m_camera.getcameramatrix();
+	if (m_debuging == true) {
+		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(1000.0f, 0.0f), Lengine::ColorRGBA8(255, 0, 0, 255));
+		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(-1000.0f, 0.0f), Lengine::ColorRGBA8(255, 0, 0, 100));
+		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(0.0f,1000.0f), Lengine::ColorRGBA8(0, 255, 0, 255));
+		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(0.0f, -1000.0f), Lengine::ColorRGBA8(0, 255, 0, 100));
+		for (auto&B : m_boxes) {
+			B.tempDebugDraw(&m_debugRenderer);
+		}
+		for (auto&L : m_lights) {
+			L.debugDraw(&m_debugRenderer);
+		}
+		m_player.tempDebugDraw(&m_debugRenderer);
+	}
+	if (m_selectMode == SelectionMode::PLACE) {
+		if (!isMouseInGroup()) {
+			switch (m_objectMode) {
+			case ObjectMode::PLATFORM:
+				m_tempBox.tempDebugDraw(&m_debugRenderer);
+				break;
+			case ObjectMode::LIGHT:
+				m_tempLight.debugDraw(&m_debugRenderer);
+				break;
+			case ObjectMode::PLAYER:
+				m_tempPlayer.tempDebugDraw(&m_debugRenderer);
+				break;
+			}
+		}
+	}
+	else {
+		if (m_currentObjectIndex != -1) {
+			switch (m_objectMode) {
+			case ObjectMode::PLATFORM:
+				m_boxes[m_currentObjectIndex].tempDebugDraw(&m_debugRenderer, true);
+				break;
+			case ObjectMode::LIGHT:
+				m_lights[m_currentObjectIndex].debugDraw(&m_debugRenderer, true);
+				break;
+			case ObjectMode::PLAYER:
+				m_player.tempDebugDraw(&m_debugRenderer, true);
+				break;
+			}
+		}
+	}
+	m_debugRenderer.end();
+	m_debugRenderer.render(camMatrix, 1.0f);
 }
 void EditScreen::drawUI() {
 	m_program.use();
@@ -371,110 +482,7 @@ void EditScreen::drawUI() {
 
 	m_gui.draw();
 }
-void EditScreen::drawScreen(){
-	glm::mat4 camMatrix = m_camera.getcameramatrix();
 
-	m_program.use();
-	//texture upload
-	glActiveTexture(GL_TEXTURE0);
-	GLint samplerLoc = m_program.getuniformposition("mysampler");
-	glUniform1i(samplerLoc, 0);
-	//camera upload
-	GLint camID = m_program.getuniformposition("P");
-	glUniformMatrix4fv(camID, 1, GL_FALSE, &camMatrix[0][0]);
-	//clear
-	m_spriteBatch.begin();
-	//draw previews of BOX and PLAYER
-	if (m_selectMode == SelectionMode::PLACE && (!isMouseInGroup())) {
-		if (m_objectMode == ObjectMode::PLATFORM) {
-			m_tempBox.tempSetAll(m_desRec, m_angle, m_color, m_texture, m_physicMode);
-			m_tempBox.tempDraw(&m_spriteBatch);
-		}
-		if (m_objectMode == ObjectMode::PLAYER) {
-			m_tempPlayer.tempSetAll(glm::vec4(getMouseWorldCords(), PLAYER_DIM), m_playerTexture);
-			m_tempPlayer.tempDraw(&m_spriteBatch);
-		}
-	}
-	//m_spriteBatch.draw(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),glm::vec4(0.0f,0.0f,1.0f,1.0f),m_texture.id,1.0f, Lengine::ColorRGBA8(255, 255, 255, 255));
-	//draw BOX and PLAYER existed
-	for (int i = 0;i < m_boxes.size();i++) {
-		m_boxes[i].tempDraw(&m_spriteBatch);
-	}
-	m_player.tempDraw(&m_spriteBatch);
-	m_spriteBatch.end();
-	m_spriteBatch.renderBatch();
-	m_program.unuse();
-
-	//draw all lights
-	m_lightPro.use();
-	GLint lightCamID = m_lightPro.getuniformposition("P");
-	glUniformMatrix4fv(lightCamID, 1, GL_FALSE, &camMatrix[0][0]);
-	m_lightSprite.begin();
-	//draw preview and lights
-	if (m_selectMode == SelectionMode::PLACE && (!isMouseInGroup())) {
-		if (m_objectMode == ObjectMode::LIGHT) {
-			Light temp{ getMouseWorldCords(),m_size,m_color };
-			temp.draw(&m_lightSprite);
-		}
-	}
-	for (int i = 0;i < m_lights.size();i++) {
-			m_lights[i].draw(&m_lightSprite);
-	}
-	m_lightSprite.end();
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	m_lightSprite.renderBatch();
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	m_lightPro.unuse();
-}
-void EditScreen::drawDebug() {
-	glm::mat4 camMatrix = m_camera.getcameramatrix();
-	if (m_debuging == true) {
-		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(1000.0f, 0.0f), Lengine::ColorRGBA8(255, 0, 0, 255));
-		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(-1000.0f, 0.0f), Lengine::ColorRGBA8(255, 0, 0, 100));
-		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(0.0f,1000.0f), Lengine::ColorRGBA8(0, 255, 0, 255));
-		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(0.0f, -1000.0f), Lengine::ColorRGBA8(0, 255, 0, 100));
-		for (auto&B : m_boxes) {
-			B.tempDebugDraw(&m_debugRenderer);
-		}
-		for (auto&L : m_lights) {
-			L.debugDraw(&m_debugRenderer);
-		}
-		m_player.tempDebugDraw(&m_debugRenderer);
-	}
-	if (m_selectMode == SelectionMode::PLACE) {
-		if (!isMouseInGroup()) {
-			switch (m_objectMode) {
-			case ObjectMode::PLATFORM:
-				m_debugRenderer.drawBox(m_desRec, WHITE, m_angle);
-				break;
-			case ObjectMode::LIGHT:
-				m_debugRenderer.drawCircle(getMouseWorldCords(), m_size, WHITE);
-				m_debugRenderer.drawCircle(getMouseWorldCords(), LIGHT_SELECT_RADIUS, WHITE);
-				break;
-			case ObjectMode::PLAYER:
-				m_debugRenderer.drawCapsule(glm::vec4(getMouseWorldCords(), PLAYER_DIM), WHITE);
-				break;
-			}
-		}
-	}
-	else {
-		if (m_currentObjectIndex != -1) {
-			switch (m_objectMode) {
-			case ObjectMode::PLATFORM:
-				m_boxes[m_currentObjectIndex].tempDebugDraw(&m_debugRenderer, true);
-				break;
-			case ObjectMode::LIGHT:
-				m_lights[m_currentObjectIndex].debugDraw(&m_debugRenderer, true);
-				break;
-			case ObjectMode::PLAYER:
-				m_player.tempDebugDraw(&m_debugRenderer, true);
-				break;
-			}
-		}
-	}
-	m_debugRenderer.end();
-	m_debugRenderer.render(camMatrix, 1.0f);
-}
 
 bool EditScreen::isMouseInGroup() {
 	using namespace CEGUI;
@@ -644,7 +652,7 @@ bool EditScreen::onWindowMove(const CEGUI::EventArgs& ea) {
 	return true;
 }
 bool EditScreen::onMouseClicked(const CEGUI::EventArgs& ea) {
-	glm::vec4 tempDesRec(getMouseWorldCords(),PLAYER_DIM);
+	glm::vec4 tempDesRec(getMouseWorldCords(),PLAYER_RENDER_DIM);
 	if (m_selectMode == SelectionMode::PLACE) {
 		switch (m_objectMode)
 		{
@@ -656,7 +664,7 @@ bool EditScreen::onMouseClicked(const CEGUI::EventArgs& ea) {
 			m_lights.push_back(Light{ getMouseWorldCords(), m_size, m_color });
 			break;
 		case  ObjectMode::PLAYER:
-			m_player.tempSetAll(tempDesRec, m_playerTexture);
+			m_player.tempSetAll(tempDesRec, PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
 			break;
 		}
 		return true;
@@ -692,8 +700,8 @@ bool EditScreen::onMouseDown(const CEGUI::EventArgs& ea) {
 			}
 		}
 		//check if mouse is in player
-		tempVec = m_mouseCords - m_player.getCapsule().tempPos;
-		glm::vec2 tempDim = m_player.getCapsule().dimension;
+		tempVec = m_mouseCords - m_player.getTempPos();
+		glm::vec2 tempDim = m_player.getRenderDim();
 		if ((abs(tempVec.x) < tempDim.x / 2.0f) && (abs(tempVec.y) < tempDim.y / 2.0f))
 		{
 			//there is only one player
@@ -724,7 +732,7 @@ bool EditScreen::onObjectMove(const CEGUI::EventArgs& ea) {
 			return true;
 		}
 		else {
-			m_player.getCapsule().tempPos += offset;
+			m_player.getTempPosReference() += offset;
 			return true;
 		}
 	}

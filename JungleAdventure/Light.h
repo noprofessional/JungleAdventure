@@ -6,6 +6,7 @@
 class Light
 {
 public:
+	void tempSetAll(const glm::vec2& centerPos, float size, const Lengine::ColorRGBA8& color);
 	void draw(Lengine::SpriteBatch* spriteBatch);
 	void debugDraw(Lengine::DebugRender* debugRenderer,bool selected= false);
 

@@ -72,11 +72,6 @@ namespace Lengine {
 				transColor = LastExtensionBlock.Bytes[LastExtensionBlock.ByteCount - 1];
 			}
 
-			std::cout << Top << std::endl;
-			std::cout << Height << std::endl;
-			std::cout << Left << std::endl;
-			std::cout << Width << std::endl;
-
 			//set image array every pixel's color byte
 			for (int row = Top;row < Top+Height;row++) {
 				for (int col = Left;col < Left+Width;col++) {
