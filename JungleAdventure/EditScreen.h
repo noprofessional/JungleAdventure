@@ -13,7 +13,8 @@
 enum class ObjectMode {
 	PLAYER,
 	PLATFORM,
-	LIGHT,
+	TILE,
+	LIGHT
 };
 enum class SelectionMode {
 	SELECT,
@@ -47,8 +48,9 @@ private:
 	void setSelectObject(ObjectMode objectMode, int index);
 	void moveObject(glm::vec2& pos);
 
-	void addListToComboBox();
+	void addListToComboBox(const char* desDirectory, CEGUI::Combobox* comboBox);
 	void setPlatformWidgetVisible(bool visible);
+	void setTileWidgetVisible(bool visibility);
 	void setLightWidgetVisible(bool visibility);
 
 	//-------- Window related event Funtion --------
@@ -71,6 +73,7 @@ private:
 	bool onPlatformSelected(const CEGUI::EventArgs& ea);
 	bool onLightSelected(const CEGUI::EventArgs& ea);
 	bool onPlayerSelected(const CEGUI::EventArgs& ea);
+	bool onTileSelected(const CEGUI::EventArgs& ea);
 
 	bool onRigidButtonClicked(const CEGUI::EventArgs& ea);
 	bool onDynamicButtonClicked(const CEGUI::EventArgs& ea);
@@ -88,6 +91,7 @@ private:
 	bool onfileWindowClose(const CEGUI::EventArgs& ea);
 	bool onComboBoxEntered(const CEGUI::EventArgs& ea);
 	bool onOKButtonClicked(const CEGUI::EventArgs& ea);
+	bool onTextureInput(const CEGUI::EventArgs& ea);
 
 	Lengine::GUI m_gui;
 	CEGUI::Window* m_movingWindow = nullptr;
@@ -105,6 +109,7 @@ private:
 	CEGUI::RadioButton* b_player;
 
 	CEGUI::RadioButton* b_platform;
+	CEGUI::RadioButton* b_tile;
 	CEGUI::RadioButton* b_rigid;
 	CEGUI::RadioButton* b_dynamic;
 	CEGUI::RadioButton* b_movable;
@@ -115,6 +120,8 @@ private:
 	CEGUI::Spinner* sp_height;
 	CEGUI::Spinner* sp_angle;
 	CEGUI::Spinner* sp_size;
+	//---- Combo Box -----
+	CEGUI::Combobox* cb_texture;
 	//---- button ----
 	CEGUI::PushButton* b_save;
 	CEGUI::PushButton* b_load;

@@ -29,6 +29,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MenuScreen.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Tile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -41,6 +42,7 @@
     <ClInclude Include="MenuScreen.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="ScreenIdentifier.h" />
+    <ClInclude Include="Tile.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E8AEA122-AD29-4638-9EC6-3DE42C6A605A}</ProjectGuid>

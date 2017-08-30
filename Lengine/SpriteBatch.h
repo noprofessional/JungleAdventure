@@ -64,8 +64,10 @@ public:
 	void draw(const glm::vec4& recpos, const float & depth, const ColorRGBA8& color);
 	
 	//draw rotate boxes with direction vector
-	void draw(const glm::vec4 &recpos, const glm::vec4& recuv, const GLuint& texture
-		, const float & depth, const ColorRGBA8 &color,const glm::vec2 direction=glm::vec2(0.0f,0.0f));
+	void draw(const glm::vec4 &recpos, const glm::vec4& recuv,
+		const GLuint& texture, const float & depth,
+		const ColorRGBA8 &color=Lengine::ColorRGBA8(255,255,255,255),
+		const glm::vec2 direction=glm::vec2(0.0f,0.0f));
 	
 	//draw rotate boxes with angle in degrees
 	void draw(const glm::vec4 &recpos, const glm::vec4& recuv, const GLuint& texture

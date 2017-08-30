@@ -24,7 +24,7 @@ EditScreen::~EditScreen()
 
 void EditScreen::build()
 {
-	m_game->getWindowPtr()->setcolor(0.0f, 0.0f, 0.25f, 1.0f);
+	m_game->getWindowPtr()->setcolor(0.5f, 0.5f, 0.5f, 1.0f);
 	const int SCREEN_WIDTH = m_game->getWindowPtr()->getscreenwidth();
 	const int SCREEN_HEIGHT = m_game->getWindowPtr()->getscreenheight();
 	m_UIcamera.init(SCREEN_WIDTH,SCREEN_HEIGHT );
@@ -57,7 +57,7 @@ void EditScreen::build()
 	b2Vec2 gravity(0.0f, -9.8f);
 	m_world = std::make_unique<b2World>(gravity);
 
-	m_texture = Lengine::ResourceManager::gettexture("Textures/darkwall.png");
+	m_texture = Lengine::ResourceManager::gettexture("Textures/tile_jungle_ground_brown.png");
 	m_playerTexture = Lengine::ResourceManager::gettexture("Textures/spr_m_traveler_idle_anim.gif");
 
 	initUI();
@@ -137,6 +137,10 @@ void EditScreen::initUI() {
 		b_platform->setGroupID(GROUP_ID);
 		b_platform->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onPlatformSelected, this));
 
+		b_tile = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + 1.5f*deltaXPixel, yPixelPos), buttonSizeRec, "Group2/TileButton", temp));
+		b_tile->setGroupID(GROUP_ID);
+		b_tile->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onTileSelected, this));
+
 		b_light = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos+2* deltaXPixel, yPixelPos), buttonSizeRec, "Group2/PlayerButton", temp));
 		b_light->setGroupID(GROUP_ID);
 		b_light->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onLightSelected, this));
@@ -197,6 +201,12 @@ void EditScreen::initUI() {
 		sp_angle->setTextInputMode(CEGUI::Spinner::FloatingPoint);
 		sp_angle->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onAngleSpinnerChanged, this));
 	}
+	//Tile Widget
+	{
+		glm::vec4 sizeRec(0.0f, 0.0f, 140.0f,100.0f);
+		cb_texture = static_cast<CEGUI::Combobox*>(m_gui.createWidget("TaharezLook/Combobox", glm::vec4(0.0f, 0.0f, 90.0f, yPixelOPoint- 110.0f), sizeRec, "Group/DebugButton", temp));
+		cb_texture->subscribeEvent(CEGUI::Combobox::EventTextAccepted, CEGUI::Event::Subscriber(&EditScreen::onTextureInput, this));
+	}
 	//light widget
 	{
 		float xPixelPos = 145.0f;
@@ -227,6 +237,7 @@ void EditScreen::initUI() {
 		b_back->setText("Back");
 		b_back->subscribeEvent(CEGUI::PushButton::EventClicked, CEGUI::Event::Subscriber(&EditScreen::onBackButtonClicked, this));
 	}
+	//file window
 	{
 		float xPixel = 450.0f;
 		float yPixel = 400.0f;
@@ -367,6 +378,7 @@ void EditScreen::drawScreen(){
 		//Only draw there is a player 
 		m_player.tempDraw(&m_spriteBatch);
 	}
+
 	m_spriteBatch.end();
 	m_spriteBatch.renderBatch();
 	m_program.unuse();
@@ -564,7 +576,7 @@ void EditScreen::setSelectObject(ObjectMode objectMode, int index) {
 	m_currentObjectIndex = index;
 }
 void EditScreen::moveObject(glm::vec2& pos) {
-	const float STEP_LENGTH = 0.1f;
+	const float STEP_LENGTH = 0.01f;
 	Lengine::InputManager* im = m_game->getInputManager();
 	if (im->isKEYdown(SDLK_RIGHT)) {
 		pos.x += STEP_LENGTH;
@@ -580,30 +592,31 @@ void EditScreen::moveObject(glm::vec2& pos) {
 	}
 }
 
-void EditScreen::addListToComboBox() {
+void EditScreen::addListToComboBox(const char* desDirectory,CEGUI::Combobox* comboBox) {
 	//create if not exist, else do nothing
-	Lengine::FileIO::createDirectory("Levels");
+	Lengine::FileIO::createDirectory(desDirectory);
 
 	//clear selection state
-	cb_text->clearAllSelections();
+	comboBox->clearAllSelections();
 
 	//clear comboBox's all items
 	for (auto& I : m_items) {
-		cb_text->removeItem(I);
+		comboBox->removeItem(I);
 	}
 	//clear actual items
 	m_items.clear();
 
 	//get all directory entries and add to the Item list
 	std::vector<Lengine::DivEntry> divEntries;
-	Lengine::FileIO::getDirectoryEntries("Levels", divEntries);
+	Lengine::FileIO::getDirectoryEntries(desDirectory, divEntries);
 
 	//add the file ones to the item list and add to the comboBox
 	for (auto& E : divEntries) {
 		if (!E.isDirectory) {
-			E.path.erase(0, std::string("Levels/").size());
+			//erase the path and last '/' character
+			E.path.erase(0, std::string(desDirectory).size()+1);
 			m_items.emplace_back(new CEGUI::ListboxTextItem(E.path));
-			cb_text->addItem(m_items.back());
+			comboBox->addItem(m_items.back());
 		}
 	}
 }
@@ -615,6 +628,12 @@ void EditScreen::setPlatformWidgetVisible(bool visibility) {
 	b_dynamic->setVisible(visibility);
 	b_movable->setVisible(visibility);
 }
+void EditScreen::setTileWidgetVisible(bool visibility) {
+	sp_width->setVisible(visibility);
+	sp_height->setVisible(visibility);
+	cb_texture->setVisible(visibility);
+}
+
 void EditScreen::setLightWidgetVisible(bool visibility) {
 	s_alpha->setVisible(visibility);
 	sp_size->setVisible(visibility);
@@ -802,6 +821,7 @@ bool EditScreen::onPlayerSelected(const CEGUI::EventArgs& ea) {
 		m_objectMode = ObjectMode::PLAYER;
 		setPlatformWidgetVisible(false);
 		setLightWidgetVisible(false);
+		setTileWidgetVisible(false);
 	}
 	return true;
 }
@@ -809,19 +829,34 @@ bool EditScreen::onPlatformSelected(const CEGUI::EventArgs& ea) {
 	if (b_platform->isSelected()) {
 		m_objectMode = ObjectMode::PLATFORM;
 		m_color.a = 255;
-		setPlatformWidgetVisible(true);
 		setLightWidgetVisible(false);
+		setTileWidgetVisible(false);
+		setPlatformWidgetVisible(true);
+
 	}
 	return true;
 }
 bool EditScreen::onLightSelected(const CEGUI::EventArgs& ea) {
 	if (b_light->isSelected()) {
 		m_objectMode = ObjectMode::LIGHT;
-		setLightWidgetVisible(true);
 		setPlatformWidgetVisible(false);
+		setTileWidgetVisible(false);
+		setLightWidgetVisible(true);
+
 	}
 	return true;
 }
+bool EditScreen::onTileSelected(const CEGUI::EventArgs& ea) {
+	if (b_tile->isSelected()) {
+		m_objectMode = ObjectMode::TILE;
+		setLightWidgetVisible(false);
+		setPlatformWidgetVisible(false);
+		setTileWidgetVisible(true);
+		addListToComboBox("Textures/Tiles", cb_texture);
+	}
+	return true;
+}
+
 bool EditScreen::onRigidButtonClicked(const CEGUI::EventArgs& ea) {
 	if (b_rigid->isSelected())
 		m_physicMode = PhysicMode::RIGID;
@@ -859,14 +894,14 @@ bool EditScreen::onSaveButtonClicked(const CEGUI::EventArgs& ea) {
 	w_file->setVisible(true);
 	m_fileMode = FileMode::SAVE;
 	b_select->setSelected(true);
-	addListToComboBox();
+	addListToComboBox("Levels",cb_text);
 	return true;
 }
 bool EditScreen::onLoadButtonClicked(const CEGUI::EventArgs& ea) {
 	w_file->setVisible(true);
 	m_fileMode = FileMode::LOAD;
 	b_select->setSelected(true);
-	addListToComboBox();
+	addListToComboBox("Levels", cb_text);
 	return true;
 }
 bool EditScreen::onBackButtonClicked(const CEGUI::EventArgs& ea) {
@@ -895,5 +930,10 @@ bool EditScreen::onOKButtonClicked(const CEGUI::EventArgs& ea) {
 		break;
 	}
 	w_file->setVisible(false);
+	return true;
+}
+bool EditScreen::onTextureInput(const CEGUI::EventArgs& ea) {
+	std::string texturePath(cb_texture->getText().c_str());
+	m_texture = m_game->getTextureCache()->gettexture("Textures/Tiles/"+texturePath);
 	return true;
 }

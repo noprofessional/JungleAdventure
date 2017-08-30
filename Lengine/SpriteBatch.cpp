@@ -77,7 +77,7 @@ namespace Lengine {
 	}
 
 	void SpriteBatch::draw(const glm::vec4 &recpos, const glm::vec4& recuv, const GLuint& textureID
-		, const float & depth, const ColorRGBA8 &color, const glm::vec2 direct /*= glm::vec2(0.0f, 0.0f)*/) {
+		, const float & depth, const ColorRGBA8 &color/* = Lengine::ColorRGBA8(255, 255, 255, 255)*/, const glm::vec2 direct /*= glm::vec2(0.0f, 0.0f)*/) {
 		glm::vec2 norDirect;
 		//add the right frame to glyph
 		if (direct.x == 0 && direct.y == 0)

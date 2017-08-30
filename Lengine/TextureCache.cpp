@@ -19,7 +19,7 @@ TextureCache::~TextureCache()
 {
 }
 
-GLtexture TextureCache::gettexture(std::string texturepath) {
+GLtexture TextureCache::gettexture(const std::string& texturepath) {
 
 	//try to find the texture
 	auto mit = m_texturemap.find(texturepath);
