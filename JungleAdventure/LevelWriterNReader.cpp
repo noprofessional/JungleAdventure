@@ -2,7 +2,7 @@
 
 #include<fstream>
 #include<Lengine/FatalError.h>
-#include<Lengine/ResourceManager.h>
+#include<Lengine/TextureCache.h>
 
 #include"Player.h"
 #include"Box.h"
@@ -91,16 +91,18 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 }
 	
 void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::vector<Box>& boxes, std::vector<Light>& lights) {
+	
+	Lengine::GLtexture texture;
+	Lengine::TextureCache tempCache;
+
 	//player load
 	{
 		glm::vec4 desRec;
 		glm::vec2 collisionDim;
 		glm::vec2 posOffset;
-		Lengine::GLtexture texture;
 		fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w 
 			>>collisionDim.x>>collisionDim.y>>posOffset.x>>posOffset.y
 			>> texture.filePath;
-		Lengine::TextureCache tempCache;
 		texture = tempCache.gettexture(texture.filePath);
 		std::cout << posOffset.y;
 		player.tempSetAll(desRec, collisionDim,posOffset,texture);
@@ -112,7 +114,6 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 		int physicModeCode;
 		PhysicMode physicMode;
 		Lengine::ColorRGBA8 color;
-		Lengine::GLtexture texture;
 
 		int size;
 		fileIn >> size;
@@ -133,7 +134,7 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 				physicMode = PhysicMode::MOVABLE;
 				break;
 			}
-			texture = Lengine::ResourceManager::gettexture(texture.filePath);
+			texture = tempCache.gettexture(texture.filePath);
 			boxes[i].tempSetAll(desRec, angle, color, texture, physicMode);
 		}
 	}

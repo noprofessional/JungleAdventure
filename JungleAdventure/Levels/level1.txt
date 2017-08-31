@@ -1,9 +1,9 @@
 100
--3.8125 1.78125 2 2 0.9 1.8 0 -0.15 Textures/spr_m_traveler_idle_anim.gif
+0 0 0 0 0 0 0 0 
 5
--4.21875 0.1875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
--3.1875 0.125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
--2.15625 0.15625 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
--1.1875 0.125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
--0.1875 0.0625 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
+-140 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
+-108 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
+-76 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
+-44 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
+-12 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
 0

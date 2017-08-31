@@ -4,7 +4,6 @@
 #include<ctime>
 
 Box::Box() {
-
 }
 Box::~Box() {
 
@@ -62,11 +61,12 @@ void Box::tempSetAll(const glm::vec4& desRec, const float& angle,
 	physicMode = PhysicMode;
 }
 void Box::tempDraw(Lengine::SpriteBatch * spritebatch) {
-	glm::vec4 tempDesRec(tempPos, dimension);
-	spritebatch->draw(tempDesRec, glm::vec4(0.0f, 0.0f, dimension.x, dimension.y), texture.ids[0], 1.0f, color, tempAngle);
+	glm::vec4 tempDesRec(tempPos.x, tempPos.y, dimension.x*texture.width, dimension.y*texture.height);
+	glm::vec4 tempUv(0.0f, 0.0f, dimension.x, dimension.y);
+	spritebatch->draw(tempDesRec, tempUv, texture.ids[0], 1.0f, color, tempAngle);
 }
 void Box::tempDebugDraw(Lengine::DebugRender* debugRenderer, bool selected /*= false*/) {
-	glm::vec4 desRec(tempPos, dimension);
+	glm::vec4 desRec(tempPos.x, tempPos.y, dimension.x*texture.width, dimension.y*texture.height);
 	if (!selected) {
 		switch (physicMode)
 		{
@@ -86,12 +86,21 @@ void Box::tempDebugDraw(Lengine::DebugRender* debugRenderer, bool selected /*= f
 	}
 }
 
-
-Box& Box::operator=(Box&src) {
-	tempPos = src.tempPos;
-	dimension = src.dimension;
-	color = src.color;
-	texture = src.texture;
-	tempAngle = src.tempAngle;
-	return *this;
+bool Box::isInBox(const glm::vec2 pos) {
+	glm::vec2 desVec = pos - tempPos;
+	if (abs(desVec.x) < dimension.x*texture.width/2.0f && abs(desVec.y) < dimension.y*texture.height/2.0f)
+		return true;
+	else
+		return false;
 }
+
+
+//Box& Box::operator=(Box&src) {
+//	tempPos = src.tempPos;
+//	dimension = src.dimension;
+//	color = src.color;
+//	texture = src.texture;
+//	tempAngle = src.tempAngle;
+//	m_body = src.m_body;
+//	return *this;
+//}

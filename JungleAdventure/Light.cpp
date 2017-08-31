@@ -24,3 +24,11 @@ void Light::debugDraw(Lengine::DebugRender* debugRenderer, bool selected /*= fal
 		debugRenderer->drawCircle(centerPos, size, WHITE);
 	}
 }
+
+bool Light::isInLight(const glm::vec2&currentPos) {
+	glm::vec2 desVec(currentPos - centerPos);
+	if (glm::length(desVec) < SELECT_RADIUS)
+		return true;
+	else
+		return false;
+}

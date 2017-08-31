@@ -25,9 +25,8 @@ public:
 		const Lengine::ColorRGBA8& color,const Lengine::GLtexture& texture,const PhysicMode& physicMode);
 	void tempDraw(Lengine::SpriteBatch * spritebatch);
 	void tempDebugDraw(Lengine::DebugRender* debugRenderer,bool selected= false);
-
 	//-------- operator --------
-	Box& operator=(Box&src);
+	//Box& operator=(Box&src);
 	//-------- getter --------
 	//get the position after added to the world
 	glm::vec2 getpos()const { return glm::vec2(m_body->GetPosition().x, m_body->GetPosition().y); }
@@ -35,6 +34,7 @@ public:
 	float getangle() const{ return m_body->GetAngle(); }
 	//get the body after added to the world
 	b2Body* getbody() { return m_body; }
+	bool isInBox(const glm::vec2 pos);
 
 	glm::vec2 tempPos;
 	glm::vec2 dimension;

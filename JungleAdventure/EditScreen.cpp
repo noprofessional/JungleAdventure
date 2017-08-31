@@ -8,9 +8,9 @@
 
 const float LIGHT_SELECT_RADIUS = 0.5f;
 const Lengine::ColorRGBA8 WHITE(255, 255, 255, 255);
-const glm::vec2 PLAYER_RENDER_DIM(2.0f, 2.0f);
-const glm::vec2 PLAYER_POS_OFFSET(0.0f, -0.15f);
-const glm::vec2 PLAYER_COLLISOIN_DIM(0.9f, 1.8f);
+const glm::vec2 PLAYER_RENDER_DIM(64.0f, 64.0f);
+const glm::vec2 PLAYER_POS_OFFSET(0.0f, -4.0f);
+const glm::vec2 PLAYER_COLLISOIN_DIM(32.0f, 56.0f);
 
 
 EditScreen::EditScreen(Lengine::IMainGame* ownergame):IScreen(ownergame,EDIT_SCREEN)
@@ -33,7 +33,7 @@ void EditScreen::build()
 
 	m_camera.init(SCREEN_WIDTH, SCREEN_HEIGHT);
 	m_camera.setposition(glm::vec2(0.0f, 0.0f));
-	m_camera.setscale(32.0f);
+	m_camera.setscale(1.0f);
 
 	m_program.compileshaders(std::string("Shaders/shaderpro.vert"), std::string("Shaders/shaderpro.frag"));
 	m_program.addattribute("vertexPosition", Lengine::POS);
@@ -57,7 +57,7 @@ void EditScreen::build()
 	b2Vec2 gravity(0.0f, -9.8f);
 	m_world = std::make_unique<b2World>(gravity);
 
-	m_texture = Lengine::ResourceManager::gettexture("Textures/tile_jungle_ground_brown.png");
+	m_texture = Lengine::ResourceManager::gettexture("Textures/white.png");
 	m_playerTexture = Lengine::ResourceManager::gettexture("Textures/spr_m_traveler_idle_anim.gif");
 
 	initUI();
@@ -72,26 +72,22 @@ void EditScreen::initUI() {
 	m_gui.showMouseCursor();
 	SDL_ShowCursor(0);
 
+	//root window event
+	m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseButtonUp, CEGUI::Event::Subscriber(&EditScreen::onMouseUp, this));
+	m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseClick, CEGUI::Event::Subscriber(&EditScreen::onMouseClicked, this));
+	m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseButtonDown, CEGUI::Event::Subscriber(&EditScreen::onMouseDown, this));
+	
+
 	//group box init
 	float groupWidth = 200.0f; float& GW = groupWidth;
 	float groupHeight = 450.0f; float& GH = groupHeight;
 	float Margin = 10.0f;
-	//-------- Property Set --------
-	CEGUI::Window* temp = nullptr;
-	temp = m_gui.createWidget("TaharezLook/GroupBox",
-		glm::vec4(0.0f, 1.0f, GW / 2.0f + Margin, -GH / 2.0f - Margin),
-		glm::vec4(0.0f, 0.0f, GW, GH), "Group1");
+	CEGUI::Window* temp = m_gui.createWidget("TaharezLook/GroupBox",glm::vec4(0.0f, 1.0f, GW / 2.0f + Margin, -GH / 2.0f - Margin),glm::vec4(0.0f, 0.0f, GW, GH), "Group1");
 	m_group = static_cast<CEGUI::GroupBox*>(temp);
 	m_group->setAlwaysOnTop(false);
 	m_group->moveToBack();
-	//-------- Event Handle --------
 	m_group->subscribeEvent(CEGUI::GroupBox::EventMouseDoubleClick, CEGUI::Event::Subscriber(&EditScreen::onWindowSelecte, this));
 	m_group->subscribeEvent(CEGUI::GroupBox::EventMouseButtonUp, CEGUI::Event::Subscriber(&EditScreen::onMouseUp, this));
-	//to realse button as a drop action
-	m_gui.m_root->subscribeEvent(CEGUI::GroupBox::EventMouseButtonUp, CEGUI::Event::Subscriber(&EditScreen::onMouseUp, this));
-	m_gui.m_root->subscribeEvent(CEGUI::GroupBox::EventMouseClick, CEGUI::Event::Subscriber(&EditScreen::onMouseClicked, this));
-	m_gui.m_root->subscribeEvent(CEGUI::GroupBox::EventMouseButtonDown, CEGUI::Event::Subscriber(&EditScreen::onMouseDown, this));
-//	m_gui.m_root->subscribeEvent(CEGUI::GroupBox::EventMouseButtonUp, CEGUI::Event::Subscriber(&EditScreen::onMouseUp, this));
 
 	float yPixelOPoint = 385.0f;
 	//three slider init and bound to the group box
@@ -121,96 +117,109 @@ void EditScreen::initUI() {
 		s_alpha->setClickStep(1.0f);
 		s_alpha->setMaxValue(255.0f);
 	}
-	//radio buttons and debug toggle button
+	//select OR place AND debug
 	{
-		const int GROUP_ID = 1;
+		const int GROUP_ID_ZERO = 0;
 		glm::vec4 buttonSizeRec(0.0f, 0.0f, 20.0f, 20.0f);
 
 		float xPixelPos = 30.0f;
-		float yPixelPos = yPixelOPoint-65.0f;
+		float yPixelPos = yPixelOPoint - 55.0f;
 		float deltaXPixel = 63.0f;
+		b_select = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), buttonSizeRec, "Group1/SelectButton", temp));
+		b_select->setGroupID(GROUP_ID_ZERO);
+		b_select->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onSelectMode, this));
+
+		b_place = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + deltaXPixel, yPixelPos), buttonSizeRec, "Group1/PlaceButton", temp));
+		b_place->setGroupID(GROUP_ID_ZERO);
+		b_place->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onPlaceMode, this));
+
+		b_debug = static_cast<CEGUI::ToggleButton*>(m_gui.createWidget("TaharezLook/Checkbox", glm::vec4(0.0f, 0.0f, xPixelPos + 2 * deltaXPixel, yPixelPos), buttonSizeRec, "Group/DebugButton", temp));
+		b_debug->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onDebugButtonClicked, this));
+
+	}
+	//player, platform OR light
+	{
+		const int GROUP_ID_ONE = 1;
+		glm::vec4 buttonSizeRec(0.0f, 0.0f, 20.0f, 20.0f);
+
+		float xPixelPos = 30.0f;
+		float yPixelPos = yPixelOPoint - 85.0f;
+		float deltaXPixel = 63.0f;
+
 		b_player = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), buttonSizeRec, "Group2/PlayerButton", temp));
-		b_player->setGroupID(GROUP_ID );
+		b_player->setGroupID(GROUP_ID_ONE);
 		b_player->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onPlayerSelected, this));
 
 		b_platform = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos+ deltaXPixel, yPixelPos), buttonSizeRec, "Group2/PlatformButton", temp));
-		b_platform->setGroupID(GROUP_ID);
+		b_platform->setGroupID(GROUP_ID_ONE);
 		b_platform->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onPlatformSelected, this));
 
-		b_tile = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + 1.5f*deltaXPixel, yPixelPos), buttonSizeRec, "Group2/TileButton", temp));
-		b_tile->setGroupID(GROUP_ID);
-		b_tile->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onTileSelected, this));
-
-		b_light = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos+2* deltaXPixel, yPixelPos), buttonSizeRec, "Group2/PlayerButton", temp));
-		b_light->setGroupID(GROUP_ID);
+		b_light = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos+2* deltaXPixel, yPixelPos), buttonSizeRec, "Group2/LightButton", temp));
+		b_light->setGroupID(GROUP_ID_ONE);
 		b_light->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onLightSelected, this));
 
-		float yPixelPos2 = yPixelOPoint -225.0f;
-		b_select = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos , yPixelPos2), buttonSizeRec, "Group1/SelectButton", temp));
-		b_select->setGroupID(GROUP_ID+1);
-		b_select->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onSelectMode, this));
-
-		b_place = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton",glm::vec4(0.0f, 0.0f, xPixelPos + deltaXPixel , yPixelPos2), buttonSizeRec, "Group1/PlaceButton", temp));
-		b_place->setGroupID(GROUP_ID+1);
-		b_place->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onPlaceMode, this));
-		
-		b_debug = static_cast<CEGUI::ToggleButton*>(m_gui.createWidget("TaharezLook/Checkbox", glm::vec4(0.0f, 0.0f, xPixelPos + 2 * deltaXPixel, yPixelPos2), buttonSizeRec, "Group/DebugButton", temp));
-		b_debug->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onDebugButtonClicked, this));
 	}
 	//platform widget 
 	{
-		glm::vec4 buttonSizeRec(0.0f, 0.0f, 20.0f, 20.0f);
-		float xPixelPos = 20.0f;
-		float yPixelPos = yPixelOPoint - 90.0f;
-		float deltaYPixel = -20.0f;
-		b_rigid = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), buttonSizeRec, "Group1/RigidButton", temp));
-		b_rigid->setGroupID(3);
-		b_rigid->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onRigidButtonClicked, this));
+		//physic mode
+		{
+			const int GROUP_ID_TWO = 2;
+			glm::vec4 buttonSizeRec(0.0f, 0.0f, 20.0f, 20.0f);
+			float xPixelPos = 30.0f;
+			float yPixelPos = yPixelOPoint - 115.0f;
+			float deltaXPixel = 63.0f;
+			b_rigid = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), buttonSizeRec, "Group1/RigidButton", temp));
+			b_rigid->setGroupID(GROUP_ID_TWO);
+			b_rigid->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onRigidButtonClicked, this));
 
-		b_dynamic = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos + deltaYPixel), buttonSizeRec, "Group1/DynamicButton", temp));
-		b_dynamic->setGroupID(3);
-		b_dynamic->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onDynamicButtonClicked, this));
+			b_dynamic = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + deltaXPixel, yPixelPos), buttonSizeRec, "Group1/DynamicButton", temp));
+			b_dynamic->setGroupID(GROUP_ID_TWO);
+			b_dynamic->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onDynamicButtonClicked, this));
 
-		b_movable = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos + 2 * deltaYPixel), buttonSizeRec, "Group1/MovableButton", temp));
-		b_movable->setGroupID(3);
-		b_movable->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onMovableButtonClicked, this));
+			b_movable = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + 2 * deltaXPixel, yPixelPos), buttonSizeRec, "Group1/MovableButton", temp));
+			b_movable->setGroupID(GROUP_ID_TWO);
+			b_movable->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onMovableButtonClicked, this));
+		}
+		//width, height and angle
+		{
+			float xPixelPos = 30.0f;
+			float yPixelPos = yPixelOPoint - 150.0f;
+			float deltaXPixel = 60.0f;
+			glm::vec4 sizeRec(0.0f, 0.0f, 55.0f, 25.0f);
+			sp_width = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), sizeRec, "Group/WidthSpinner", temp));
+			sp_width->setMinimumValue(0.0f);
+			sp_width->setMaximumValue(1000.0f);
+			sp_width->setStepSize(0.1f);
+			sp_width->setTextInputMode(CEGUI::Spinner::FloatingPoint);
+			sp_width->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onWidthSpinnerChanged, this));
 
-		float xPixelPos2 = 50.0f;
-		float yPixelPos2 = yPixelOPoint-175.0f;
-		float deltaXPixel2 = 90.0f;
-		float deltaYPixel2 = 55.0f;
-		glm::vec4 sizeRec(0.0f, 0.0f, 70.0f, 30.0f);
-		sp_width = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos2, yPixelPos2), sizeRec, "Group/WidthSpinner", temp));
-		sp_width->setMinimumValue(0.0f);
-		sp_width->setMaximumValue(1000.0f);
-		sp_width->setStepSize(0.1f);
-		sp_width->setTextInputMode(CEGUI::Spinner::FloatingPoint);
-		sp_width->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onWidthSpinnerChanged, this));
+			sp_height = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos+deltaXPixel, yPixelPos), sizeRec, "Group/HeightSpinner", temp));
+			sp_height->setMinimumValue(0.0f);
+			sp_height->setMaximumValue(1000.0f);
+			sp_height->setStepSize(0.1f);
+			sp_height->setTextInputMode(CEGUI::Spinner::FloatingPoint);
+			sp_height->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onHeightSpinnerChanged, this));
 
-		sp_height = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos2 + deltaXPixel2, yPixelPos2), sizeRec, "Group/HeightSpinner", temp));
-		sp_height->setMinimumValue(0.0f);
-		sp_height->setMaximumValue(1000.0f);
-		sp_height->setStepSize(0.1f);
-		sp_height->setTextInputMode(CEGUI::Spinner::FloatingPoint);
-		sp_height->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onHeightSpinnerChanged, this));
-
-		sp_angle = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos2 + deltaXPixel2, yPixelPos2 + deltaYPixel2), sizeRec, "Group/AngleSpinner", temp));
-		sp_angle->setMinimumValue(0.0f);
-		sp_angle->setMaximumValue(360.0f);
-		sp_angle->setStepSize(0.1f);
-		sp_angle->setTextInputMode(CEGUI::Spinner::FloatingPoint);
-		sp_angle->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onAngleSpinnerChanged, this));
-	}
-	//Tile Widget
-	{
-		glm::vec4 sizeRec(0.0f, 0.0f, 140.0f,100.0f);
-		cb_texture = static_cast<CEGUI::Combobox*>(m_gui.createWidget("TaharezLook/Combobox", glm::vec4(0.0f, 0.0f, 90.0f, yPixelOPoint- 110.0f), sizeRec, "Group/DebugButton", temp));
-		cb_texture->subscribeEvent(CEGUI::Combobox::EventTextAccepted, CEGUI::Event::Subscriber(&EditScreen::onTextureInput, this));
+			sp_angle = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos + 2 * deltaXPixel, yPixelPos ), sizeRec, "Group/AngleSpinner", temp));
+			sp_angle->setMinimumValue(0.0f);
+			sp_angle->setMaximumValue(360.0f);
+			sp_angle->setStepSize(0.1f);
+			sp_angle->setTextInputMode(CEGUI::Spinner::FloatingPoint);
+			sp_angle->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onAngleSpinnerChanged, this));
+		}
+		//texture comboBox
+		{
+			glm::vec4 comboBoxSizeRec(0.0f, 0.0f, 140.0f, 150.0f);
+			float xPixelPos3 = 90.0f;
+			float yPixelPos3 = yPixelOPoint - 240.0f;
+			cb_texture = static_cast<CEGUI::Combobox*>(m_gui.createWidget("TaharezLook/Combobox", glm::vec4(0.0f, 0.0f, xPixelPos3, yPixelPos3), comboBoxSizeRec, "Group/TextureComboBox", temp));
+			cb_texture->subscribeEvent(CEGUI::Combobox::EventTextAccepted, CEGUI::Event::Subscriber(&EditScreen::onTextureInput, this));
+		}
 	}
 	//light widget
 	{
-		float xPixelPos = 145.0f;
-		float yPixelPos = yPixelOPoint-135.0f;
+		float xPixelPos = 100.0f;
+		float yPixelPos = yPixelOPoint-140.0f;
 		glm::vec4 sizeRec(0.0f, 0.0f, 70.0f, 30.0f);
 		sp_size = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f,0.0f, xPixelPos, yPixelPos), sizeRec, "Group/SizeSpinner", temp));
 		sp_size->setMinimumValue(0.0f);
@@ -222,8 +231,8 @@ void EditScreen::initUI() {
 	//save button and load button and back button
 	{
 		float xPixelPos = 90.0f;
-		float yPixelPos = yPixelOPoint-360.0f;
-		float deltaYPixel = 45.0f;
+		float yPixelPos = 30.0f;
+		float deltaYPixel = 40.0f;
 		glm::vec4 buttonSize(0.0f, 0.0f, 90.0f, 35.0f);
 		b_save = static_cast<CEGUI::PushButton*>(m_gui.createWidget("TaharezLook/Button", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos + 2 * deltaYPixel), buttonSize, "Group/saveButton", temp));
 		b_save->setText("Save");
@@ -279,7 +288,7 @@ void EditScreen::initUI() {
 		sp_width->setCurrentValue(1.0f);
 		sp_height->setCurrentValue(1.0f);
 		sp_angle->setCurrentValue(0.0f);
-		sp_size->setCurrentValue(10.0f);
+		sp_size->setCurrentValue(320.0f);
 		//frame window invisable
 		w_file->setVisible(false);
 	}
@@ -303,6 +312,11 @@ void EditScreen::process()
 			if(!isMouseInGroup())
 			// Linear scaling sucks for mouse wheel zoom so we multiply by getScale() instead.
 			m_camera.offsetScale(m_camera.getscale()*evnt.wheel.y * 0.1f);
+		if (evnt.type == SDL_KEYDOWN) {
+			if (evnt.key.keysym.sym == SDLK_r) {
+				m_camera.setscale(1.0f);
+			}
+		}
 	}
 }
 
@@ -311,8 +325,6 @@ void EditScreen::update()
 	m_UIcamera.change();
 	m_camera.change();
 	m_game->getInputManager()->update();
-	m_desRec.x = getMouseWorldCords().x;
-	m_desRec.y = getMouseWorldCords().y;
 
 	if (m_selectMode == SelectionMode::SELECT) {
 		if (m_currentObjectIndex != -1) {
@@ -322,7 +334,7 @@ void EditScreen::update()
 				moveObject(b.tempPos);
 				b.texture = m_texture;
 				b.color = m_color;
-				b.dimension = glm::vec2(m_desRec.z, m_desRec.w);
+				b.dimension = m_dimension;
 				b.tempAngle = m_angle;
 			}else if (m_objectMode == ObjectMode::LIGHT) {
 				Light& L = m_lights[m_currentObjectIndex];
@@ -360,11 +372,31 @@ void EditScreen::drawScreen(){
 	m_spriteBatch.begin();
 	//draw previews of BOX and PLAYER
 	if (m_selectMode == SelectionMode::PLACE && (!isMouseInGroup())) {
-		if (m_objectMode == ObjectMode::PLATFORM) {
-			m_tempBox.tempSetAll(m_desRec, m_angle, m_color, m_texture, m_physicMode);
-			m_tempBox.tempDraw(&m_spriteBatch);
+
+		//default aligned position to mouse world coordinates
+		glm::vec2 alignedPos = getMouseWorldCords();
+		for (auto& B : m_boxes) {
+			if (B.isInBox(getMouseWorldCords())) {
+				//change it if is in a box
+				glm::vec2 desVec = getMouseWorldCords() - B.tempPos;
+				if (desVec.x > 0 && abs(desVec.y) <= desVec.x)
+				{
+					alignedPos = B.tempPos + glm::vec2((B.texture.width + m_texture.width) / 2.0f, 0.0f);
+				}
+				else if (desVec.x < 0 && abs(desVec.y) <= -desVec.x)
+					alignedPos = B.tempPos - glm::vec2((B.texture.width +m_texture.width) / 2.0f, 0.0f);
+				else if (desVec.y > 0 && abs(desVec.x) <= desVec.y)
+					alignedPos = B.tempPos + glm::vec2(0.0f, (B.texture.height + m_texture.height) / 2.0f);
+				else
+					alignedPos = B.tempPos - glm::vec2(0.0f, (B.texture.height + m_texture.height) / 2.0f);
+				break;
+			}
 		}
-		if (m_objectMode == ObjectMode::PLAYER) {
+
+		if (m_objectMode == ObjectMode::PLATFORM) {
+			m_tempBox.tempSetAll(glm::vec4(alignedPos,m_dimension), m_angle, m_color, m_texture, m_physicMode);
+			m_tempBox.tempDraw(&m_spriteBatch);
+		}else if (m_objectMode == ObjectMode::PLAYER) {
 			m_tempPlayer.tempSetAll(glm::vec4(getMouseWorldCords(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
 			m_tempPlayer.tempDraw(&m_spriteBatch);
 		}
@@ -378,7 +410,7 @@ void EditScreen::drawScreen(){
 		//Only draw there is a player 
 		m_player.tempDraw(&m_spriteBatch);
 	}
-
+	
 	m_spriteBatch.end();
 	m_spriteBatch.renderBatch();
 	m_program.unuse();
@@ -482,9 +514,9 @@ void EditScreen::drawUI() {
 	addLable(static_cast<CEGUI::Window*>(sp_width), "Width");
 	addLable(static_cast<CEGUI::Window*>(sp_height), "Height");
 	addLable(static_cast<CEGUI::Window*>(sp_angle), "Angle");
-	addRightLable(static_cast<CEGUI::Window*>(b_rigid), "Rigid");
-	addRightLable(static_cast<CEGUI::Window*>(b_dynamic), "Dynamic");
-	addRightLable(static_cast<CEGUI::Window*>(b_movable), "Movable");
+	addLable(static_cast<CEGUI::Window*>(b_rigid), "Rigid");
+	addLable(static_cast<CEGUI::Window*>(b_dynamic), "Dynamic");
+	addLable(static_cast<CEGUI::Window*>(b_movable), "Movable");
 	addLable(static_cast<CEGUI::Window*>(sp_size), "Size");
 
 	m_spriteBatch.end();
@@ -494,7 +526,6 @@ void EditScreen::drawUI() {
 
 	m_gui.draw();
 }
-
 
 bool EditScreen::isMouseInGroup() {
 	using namespace CEGUI;
@@ -512,7 +543,7 @@ glm::vec2 EditScreen::getMouseWorldCords() {
 }
 void EditScreen::addLable(CEGUI::Window*widget, const char* text) {
 	if (widget->isVisible()) {
-		float distance = 10.0f;		//lable has 5pix distance from the wiget
+		float distance = 7.0f;		//lable has 5pix distance from the wiget
 		float scale = 0.6f;
 		glm::vec2 pos(widget->getPixelPosition().d_x, widget->getPixelPosition().d_y);
 		pos = m_UIcamera.wintoworld(pos);
@@ -551,6 +582,8 @@ void EditScreen::setSelectObject(ObjectMode objectMode, int index) {
 		s_green->setCurrentValue(m_boxes[index].color.g);
 		s_blue->setCurrentValue(m_boxes[index].color.b);
 		s_alpha->setCurrentValue(m_boxes[index].color.a);
+		cb_texture->setText(CEGUI::String(m_boxes[index].texture.filePath));
+		m_texture = m_boxes[index].texture;
 		switch (m_boxes[index].physicMode) {
 		case PhysicMode::RIGID:
 			b_rigid->setSelected(true);
@@ -621,19 +654,16 @@ void EditScreen::addListToComboBox(const char* desDirectory,CEGUI::Combobox* com
 	}
 }
 void EditScreen::setPlatformWidgetVisible(bool visibility) {
-	sp_width->setVisible(visibility);
-	sp_height->setVisible(visibility);
-	sp_angle->setVisible(visibility);
 	b_rigid->setVisible(visibility);
 	b_dynamic->setVisible(visibility);
 	b_movable->setVisible(visibility);
-}
-void EditScreen::setTileWidgetVisible(bool visibility) {
+
 	sp_width->setVisible(visibility);
 	sp_height->setVisible(visibility);
+	sp_angle->setVisible(visibility);
+
 	cb_texture->setVisible(visibility);
 }
-
 void EditScreen::setLightWidgetVisible(bool visibility) {
 	s_alpha->setVisible(visibility);
 	sp_size->setVisible(visibility);
@@ -671,34 +701,55 @@ bool EditScreen::onWindowMove(const CEGUI::EventArgs& ea) {
 	return true;
 }
 bool EditScreen::onMouseClicked(const CEGUI::EventArgs& ea) {
-	glm::vec4 tempDesRec(getMouseWorldCords(),PLAYER_RENDER_DIM);
-	if (m_selectMode == SelectionMode::PLACE) {
-		switch (m_objectMode)
-		{
-		case  ObjectMode::PLATFORM:
-			m_boxes.push_back(Box());
-			m_boxes.back().tempSetAll(m_desRec, m_angle, m_color, m_texture, m_physicMode);
-			break;
-		case  ObjectMode::LIGHT:
-			m_lights.push_back(Light{ getMouseWorldCords(), m_size, m_color });
-			break;
-		case  ObjectMode::PLAYER:
-			m_player.tempSetAll(tempDesRec, PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
-			break;
+	const CEGUI::MouseEventArgs& M = static_cast<const CEGUI::MouseEventArgs&>(ea);
+	glm::vec2 m_mouseCords = getMouseWorldCords();
+
+	if (M.button == CEGUI::LeftButton&&m_selectMode == SelectionMode::PLACE) {
+			switch (m_objectMode)
+			{
+			case  ObjectMode::PLATFORM:
+				m_boxes.push_back(Box());
+				m_boxes.back()= m_tempBox;
+				break;
+			case  ObjectMode::LIGHT:
+				m_lights.push_back(Light{ m_mouseCords, m_size, m_color });
+				break;
+			case  ObjectMode::PLAYER:
+				m_player.tempSetAll(glm::vec4(m_mouseCords, PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
+				break;
+			}
+			return true;
+	}
+	else if (M.button == CEGUI::RightButton && m_selectMode == SelectionMode::SELECT&&m_currentObjectIndex == -1) {
+		for (auto& B : m_boxes) {
+			if (B.isInBox(m_mouseCords)) {
+				std::cout << 1;
+				B = m_boxes.back();
+				m_boxes.pop_back();
+				break;
+			}
+		}
+
+		for (auto&L : m_lights) {
+			if (L.isInLight(m_mouseCords)) {
+				L = m_lights.back();
+				m_lights.pop_back();
+				break;
+			}
 		}
 		return true;
 	}
 	return true;
 }
 bool EditScreen::onMouseDown(const CEGUI::EventArgs& ea) {
-	if (m_selectMode == SelectionMode::SELECT) {
+	const CEGUI::MouseEventArgs& ma = static_cast<const CEGUI::MouseEventArgs&>(ea);
+	if (m_selectMode == SelectionMode::SELECT&&ma.button == CEGUI::LeftButton) {
 		m_mouseCords = getMouseWorldCords();
 		glm::vec2 tempVec;
 		//check if mouse is in Boxes
 		for (int i = 0;i < m_boxes.size();i++) {
-			Box& b = m_boxes[i];
-			tempVec = m_mouseCords - b.tempPos;
-			if ((abs(tempVec.x) < b.dimension.x / 2.0f) && (abs(tempVec.y) < b.dimension.y / 2.0f))
+			Box& B = m_boxes[i];
+			if (B.isInBox(m_mouseCords))
 			{
 				setSelectObject(ObjectMode::PLATFORM, i);
 				m_movingObject = true;
@@ -730,7 +781,8 @@ bool EditScreen::onMouseDown(const CEGUI::EventArgs& ea) {
 			return true;
 		}
 		//if it is in neither
-		m_currentObjectIndex = -1;
+		b_select->setSelected(false);
+		b_select->setSelected(true);
 		return true;
 
 	}
@@ -821,7 +873,6 @@ bool EditScreen::onPlayerSelected(const CEGUI::EventArgs& ea) {
 		m_objectMode = ObjectMode::PLAYER;
 		setPlatformWidgetVisible(false);
 		setLightWidgetVisible(false);
-		setTileWidgetVisible(false);
 	}
 	return true;
 }
@@ -830,9 +881,8 @@ bool EditScreen::onPlatformSelected(const CEGUI::EventArgs& ea) {
 		m_objectMode = ObjectMode::PLATFORM;
 		m_color.a = 255;
 		setLightWidgetVisible(false);
-		setTileWidgetVisible(false);
 		setPlatformWidgetVisible(true);
-
+		addListToComboBox("Textures/Tiles", cb_texture);
 	}
 	return true;
 }
@@ -840,19 +890,7 @@ bool EditScreen::onLightSelected(const CEGUI::EventArgs& ea) {
 	if (b_light->isSelected()) {
 		m_objectMode = ObjectMode::LIGHT;
 		setPlatformWidgetVisible(false);
-		setTileWidgetVisible(false);
 		setLightWidgetVisible(true);
-
-	}
-	return true;
-}
-bool EditScreen::onTileSelected(const CEGUI::EventArgs& ea) {
-	if (b_tile->isSelected()) {
-		m_objectMode = ObjectMode::TILE;
-		setLightWidgetVisible(false);
-		setPlatformWidgetVisible(false);
-		setTileWidgetVisible(true);
-		addListToComboBox("Textures/Tiles", cb_texture);
 	}
 	return true;
 }
@@ -873,16 +911,21 @@ bool EditScreen::onMovableButtonClicked(const CEGUI::EventArgs& ea) {
 	return true;
 }
 
-bool EditScreen::onHeightSpinnerChanged(const CEGUI::EventArgs& ea) {
-	m_desRec.w = sp_height->getCurrentValue();
+bool EditScreen::onWidthSpinnerChanged(const CEGUI::EventArgs& ea) {
+	m_dimension.x = sp_width->getCurrentValue();
 	return true;
 }
-bool EditScreen::onWidthSpinnerChanged(const CEGUI::EventArgs& ea) {
-	m_desRec.z = sp_width->getCurrentValue();
+bool EditScreen::onHeightSpinnerChanged(const CEGUI::EventArgs& ea) {
+	m_dimension.y = sp_height->getCurrentValue();
 	return true;
 }
 bool EditScreen::onAngleSpinnerChanged(const CEGUI::EventArgs& ea) {
 	m_angle = sp_angle->getCurrentValue();
+	return true;
+}
+bool EditScreen::onTextureInput(const CEGUI::EventArgs& ea) {
+	std::string texturePath(cb_texture->getText().c_str());
+	m_texture = m_game->getTextureCache()->gettexture("Textures/Tiles/" + texturePath);
 	return true;
 }
 bool EditScreen::onSizeSpinnerChanged(const CEGUI::EventArgs& ea) {
@@ -932,8 +975,4 @@ bool EditScreen::onOKButtonClicked(const CEGUI::EventArgs& ea) {
 	w_file->setVisible(false);
 	return true;
 }
-bool EditScreen::onTextureInput(const CEGUI::EventArgs& ea) {
-	std::string texturePath(cb_texture->getText().c_str());
-	m_texture = m_game->getTextureCache()->gettexture("Textures/Tiles/"+texturePath);
-	return true;
-}
+

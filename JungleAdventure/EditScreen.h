@@ -50,89 +50,74 @@ private:
 
 	void addListToComboBox(const char* desDirectory, CEGUI::Combobox* comboBox);
 	void setPlatformWidgetVisible(bool visible);
-	void setTileWidgetVisible(bool visibility);
 	void setLightWidgetVisible(bool visibility);
 
-	//-------- Window related event Funtion --------
+	//////////////////////////////////////////////////////////////////////////
+	//Event Call Back Functions
+	//////////////////////////////////////////////////////////////////////////
 	bool onWindowSelecte(const CEGUI::EventArgs& ea);
 	bool onWindowMove(const CEGUI::EventArgs& ea);
 	bool onMouseClicked(const CEGUI::EventArgs& ea);
 	bool onMouseDown(const CEGUI::EventArgs& ea);
 	bool onMouseUp(const CEGUI::EventArgs& ea);
 	bool onObjectMove(const CEGUI::EventArgs& ea);
-	//-------- Slider related event Funtion --------
 	bool onRedSlideChange(const CEGUI::EventArgs& ea);
 	bool onGreenSlideChange(const CEGUI::EventArgs& ea);
 	bool onBlueSlideChange(const CEGUI::EventArgs& ea);
 	bool onAlphaSliderChange(const CEGUI::EventArgs& ea);
-	//-------- CheckBox related event Function --------
 	bool onDebugButtonClicked(const CEGUI::EventArgs& ea);
 	bool onSelectMode(const CEGUI::EventArgs& ea);
 	bool onPlaceMode(const CEGUI::EventArgs& ea);
-	//-------- Radio Button related event Function --------
 	bool onPlatformSelected(const CEGUI::EventArgs& ea);
 	bool onLightSelected(const CEGUI::EventArgs& ea);
 	bool onPlayerSelected(const CEGUI::EventArgs& ea);
-	bool onTileSelected(const CEGUI::EventArgs& ea);
-
 	bool onRigidButtonClicked(const CEGUI::EventArgs& ea);
 	bool onDynamicButtonClicked(const CEGUI::EventArgs& ea);
 	bool onMovableButtonClicked(const CEGUI::EventArgs& ea);
-	//-------- Spinner related event Funtion ---------
 	bool onWidthSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onHeightSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onAngleSpinnerChanged(const CEGUI::EventArgs& ea);
+	bool onTextureInput(const CEGUI::EventArgs& ea);
 	bool onSizeSpinnerChanged(const CEGUI::EventArgs& ea);
-	//-------- Push Button Clicked Event --------
 	bool onSaveButtonClicked(const CEGUI::EventArgs& ea);
 	bool onLoadButtonClicked(const CEGUI::EventArgs& ea);
 	bool onBackButtonClicked(const CEGUI::EventArgs& ea);
-	//-------- File FrameWindow Event ---------
 	bool onfileWindowClose(const CEGUI::EventArgs& ea);
 	bool onComboBoxEntered(const CEGUI::EventArgs& ea);
 	bool onOKButtonClicked(const CEGUI::EventArgs& ea);
-	bool onTextureInput(const CEGUI::EventArgs& ea);
 
+	//////////////////////////////////////////////////////////////////////////
+	//CEGUI Widget Handlers
+	//////////////////////////////////////////////////////////////////////////
 	Lengine::GUI m_gui;
-	CEGUI::Window* m_movingWindow = nullptr;
 	CEGUI::GroupBox* m_group = nullptr;
-	//---- 4 slider for color ----
 	CEGUI::Slider* s_red= nullptr;
 	CEGUI::Slider* s_green = nullptr;
 	CEGUI::Slider* s_blue = nullptr;
 	CEGUI::Slider* s_alpha = nullptr;
-	Lengine::ColorRGBA8 m_color;
-	//---- radio buttons ----
-	CEGUI::RadioButton * b_select;
-	CEGUI::RadioButton* b_place;
-	CEGUI::ToggleButton* b_debug;
-	CEGUI::RadioButton* b_player;
-
-	CEGUI::RadioButton* b_platform;
-	CEGUI::RadioButton* b_tile;
-	CEGUI::RadioButton* b_rigid;
-	CEGUI::RadioButton* b_dynamic;
-	CEGUI::RadioButton* b_movable;
-
-	CEGUI::RadioButton* b_light;
-	//---- spinner ----
-	CEGUI::Spinner* sp_width;
-	CEGUI::Spinner* sp_height;
-	CEGUI::Spinner* sp_angle;
-	CEGUI::Spinner* sp_size;
-	//---- Combo Box -----
-	CEGUI::Combobox* cb_texture;
-	//---- button ----
-	CEGUI::PushButton* b_save;
-	CEGUI::PushButton* b_load;
-	CEGUI::PushButton* b_back;
-	//---- Frame Window ----
-	CEGUI::FrameWindow* w_file;
-	CEGUI::Combobox* cb_text;
-	CEGUI::PushButton* b_OK;
+	CEGUI::RadioButton * b_select = nullptr;
+	CEGUI::RadioButton* b_place = nullptr;
+	CEGUI::ToggleButton* b_debug = nullptr;
+	CEGUI::RadioButton* b_player = nullptr;
+	CEGUI::RadioButton* b_platform = nullptr;
+	CEGUI::RadioButton* b_light = nullptr;
+	CEGUI::RadioButton* b_rigid = nullptr;
+	CEGUI::RadioButton* b_dynamic = nullptr;
+	CEGUI::RadioButton* b_movable = nullptr;
+	CEGUI::Spinner* sp_width = nullptr;
+	CEGUI::Spinner* sp_height = nullptr;
+	CEGUI::Spinner* sp_angle = nullptr;
+	CEGUI::Combobox* cb_texture = nullptr;
+	CEGUI::Spinner* sp_size = nullptr;
+	CEGUI::PushButton* b_save = nullptr;
+	CEGUI::PushButton* b_load = nullptr;
+	CEGUI::PushButton* b_back = nullptr;
+	CEGUI::FrameWindow* w_file = nullptr;
+	CEGUI::Combobox* cb_text = nullptr;
+	CEGUI::PushButton* b_OK = nullptr;
+	CEGUI::Window* m_movingWindow = nullptr;
 	std::vector<CEGUI::ListboxTextItem*> m_items;
 
-	//---- Mode ----
 	ObjectMode m_objectMode = ObjectMode::PLAYER;
 	SelectionMode m_selectMode = SelectionMode::PLACE;
 	PhysicMode m_physicMode = PhysicMode::RIGID;
@@ -146,25 +131,28 @@ private:
 	Lengine::SpriteBatch m_lightSprite;
 	Lengine::SpriteFont m_spriteFont;
 	Lengine::DebugRender m_debugRenderer;
-	std::unique_ptr<b2World> m_world;
-	bool m_debuging = false;
 
-	CEGUI::Vector2f m_mouseUICords;
+	bool m_debuging = false;
+	bool m_movingObject = false;
 	glm::vec2 m_mouseCords;
-	glm::vec4 m_desRec;
-	Lengine::GLtexture m_texture;
-	Lengine::GLtexture m_playerTexture;
+	CEGUI::Vector2f m_mouseUICords;
+	glm::vec2 m_dimension;
 	float m_angle;
 	float m_size;
-	int m_currentObjectIndex = -1;
-	std::vector<Light> m_lights;
-	std::vector<Box> m_boxes;
-	Player m_player;
+	Lengine::ColorRGBA8 m_color;
+	Lengine::GLtexture m_texture;
+	Lengine::GLtexture m_playerTexture;
 
-	Box m_tempBox;
+	std::unique_ptr<b2World> m_world;
+
+	int m_currentObjectIndex = -1;
+	Player m_player;
+	std::vector<Box> m_boxes;
+	std::vector<Light> m_lights;
+
 	Player m_tempPlayer;
+	Box m_tempBox;
 	Light m_tempLight;
 
-	bool m_movingObject =false;
 };
 
