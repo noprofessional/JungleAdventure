@@ -20,5 +20,5 @@ namespace Lengine {
 	private:
 		std::map<std::string, GLtexture> m_texturemap;
 	};
-
+	static TextureCache textureCache;/// The game shares a same cache !!
 }

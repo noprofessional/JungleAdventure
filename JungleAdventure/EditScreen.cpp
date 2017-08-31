@@ -5,6 +5,7 @@
 #include <Lengine/ResourceManager.h>
 #include <iostream>
 #include <Lengine\FileIO.h>
+#include <Lengine\TextureCache.h>
 
 const float LIGHT_SELECT_RADIUS = 0.5f;
 const Lengine::ColorRGBA8 WHITE(255, 255, 255, 255);
@@ -925,7 +926,7 @@ bool EditScreen::onAngleSpinnerChanged(const CEGUI::EventArgs& ea) {
 }
 bool EditScreen::onTextureInput(const CEGUI::EventArgs& ea) {
 	std::string texturePath(cb_texture->getText().c_str());
-	m_texture = m_game->getTextureCache()->gettexture("Textures/Tiles/" + texturePath);
+	m_texture = Lengine::textureCache.gettexture("Textures/Tiles/" + texturePath);
 	return true;
 }
 bool EditScreen::onSizeSpinnerChanged(const CEGUI::EventArgs& ea) {

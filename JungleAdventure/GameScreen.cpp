@@ -1,6 +1,6 @@
 #include "GameScreen.h"
 #include "ScreenIdentifier.h"
-#include<Lengine/ResourceManager.h>
+#include <Lengine/TextureCache.h>
 #include "LevelWriterNReader.h"
 GameScreen::GameScreen(Lengine::IMainGame* ownergame):IScreen(ownergame,GAME_SCREEN)
 {

@@ -3,7 +3,6 @@
 #include"Window.h"
 #include"InputManager.h"
 #include"Timing.h"
-#include "TextureCache.h"
 
 namespace Lengine {
 	class Iscreen;
@@ -18,7 +17,6 @@ namespace Lengine {
 
 		Window*			getWindowPtr()						{ return &m_window; }
 		InputManager*	getInputManager()					{ return &m_inputManager; }
-		TextureCache*	getTextureCache()					{ return &m_textureCache; }
 		void			setGameState(GameState setState)	{ m_gamestate = setState; }
 
 	protected:
@@ -40,8 +38,6 @@ namespace Lengine {
 
 		Window m_window;
 		InputManager m_inputManager;
-		//for one Game should use one texture cache
-		TextureCache m_textureCache;
 	};
 
 

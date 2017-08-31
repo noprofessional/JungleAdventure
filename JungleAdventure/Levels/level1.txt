@@ -1,9 +1,19 @@
 100
-0 0 0 0 0 0 0 0 
-5
--140 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
--108 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
--76 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
--44 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
--12 68 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
+-125 122 64 64 32 56 0 -4 Textures/spr_m_traveler_idle_anim.gif
+15
+-175 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BLE_BG.png
+-143 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
+-111 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
+-79 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
+-47 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/T_B_SG_BG.png
+-15 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/SGG_BG.png
+17 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/SGG_BG.png
+49 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/SGG_BG.png
+81 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/SGG_BG.png
+113 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/T_SG_G_BG.png
+145 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
+241 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
+209 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
+177 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
+273 65 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/GG_BG.png
 0
