@@ -47,11 +47,11 @@ namespace Lengine {
 
 			//resize frame size
 			currentFrame.resize(SSize);
-			if (i>0) {	//there is already one array in the out buffer
-				for (int j = 0;j < SSize;j++) {
-					out[i][j] = out[i-1][j];	//copy the last one to this one
-				}
-			}
+			//if (i>0) {	//there is already one array in the out buffer
+			//	for (int j = 0;j < SSize;j++) {
+			//		out[i][j] = out[i-1][j];	//copy the last one to this one
+			//	}
+			//}
 
 			//raw image data of every frame
 			GifImageDesc& CurrentImageDesc = gifFile->SavedImages[i].ImageDesc;
@@ -89,7 +89,8 @@ namespace Lengine {
 
 					
 					if (transColor != -1 && temp == transColor) {
-						//if is transparent dont change color move to next pixel
+						//if is transparent change alpha to 0 then move to next pixel
+						currentFrame[colorIndex + 3] = 0x00;
 						continue;
 					}
 					else {

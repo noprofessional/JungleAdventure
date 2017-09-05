@@ -4,17 +4,24 @@
 #include<Lengine/InputManager.h>
 #include<Lengine/SpriteBatch.h>
 #include<Lengine/DebugRender.h>
+
+
 class Player {
 public:
 	Player();
 	~Player();
-	void tempSetAll(const glm::vec4 &RenderDesRec, const glm::vec2& CollisionDim, const glm::vec2& PosOffset, const Lengine::GLtexture& texture);
+	void tempSetAll(const glm::vec4 &RenderDesRec, const glm::vec2& CollisionDim, const glm::vec2& PosOffset, Lengine::GLtexture* texture);
 	void addToWorld(b2World* world);
-	void update(Lengine::InputManager* inputmanager);
-	void draw(Lengine::SpriteBatch* spritebatch, float deltaTime = 1.0f);
-	void tempDraw(Lengine::SpriteBatch* spritebatch);
+	void update(Lengine::InputManager* inputmanager, float deltaTime = 1.0f);
+	void startContact(b2Contact* contact);
+	void endContact(b2Contact* contact);
+	void draw(Lengine::SpriteBatch* spritebatch);
 	void debugDraw(Lengine::DebugRender* debugrender);
+
+	void tempDraw(Lengine::SpriteBatch* spritebatch);
 	void tempDebugDraw(Lengine::DebugRender* debugrender, bool isSelected = false);
+
+	bool isInPlayer(const glm::vec2& pos);
 
 	//////////////////////////////////////////////////////////////////////////
 	//getters
@@ -25,19 +32,43 @@ public:
 	const glm::vec2&			getCollisionDim()const	{ return m_collisoinDim; }
 	const glm::vec2&			getPosOffset()const		{ return m_posOffset; }
 	const Lengine::ColorRGBA8&	getColor()const			{ return m_color; }
-	const Lengine::GLtexture&	getTexture()const		{ return m_texture; }
+	Lengine::GLtexture*			getTexture()const		{ return m_texture; }
 	Capsule&					getCapsule()			{ return m_capsule; }
 	const Capsule&				getConstCapsule()const	{ return m_capsule; }
 private:
+	//only use in player
+	enum PlayerState {
+		IDLE,
+		JUMP_UP,
+		JUMP_MIDAIR,
+		JUMP_DOWN,
+		JUMP_LAND,
+		WALK,
+		RUN,
+		DUCK,
+		SLIDE,
+		TOTAL
+	};
+
+	glm::vec4 getRenderDesRect();
+	glm::vec4 getCollisionDesRect();
 
 	glm::vec2 m_tempPos;
 	glm::vec2 m_renderDim;
 	glm::vec2 m_collisoinDim;
-
-	//=collision POS - render POS
-	glm::vec2 m_posOffset;
-
+	glm::vec2 m_posOffset;	//=collision POS - render POS
 	Lengine::ColorRGBA8 m_color;
-	Lengine::GLtexture m_texture;
+	Lengine::GLtexture* m_texture=nullptr;
+	int m_imageCounter=0;
+	glm::vec4 m_UVdesRec= glm::vec4(0.0f,0.0f,1.0f,1.0f);
+	Lengine::GLtexture* m_textures[PlayerState::TOTAL];
+	PlayerState m_playerState = PlayerState::IDLE;
+
+	bool m_isOnGround = true;
+	bool m_isJumping = false;
+	int m_contactNUM = 0;
+	bool m_isPending = false;
+	bool m_startJump = false;
+
 	Capsule m_capsule;
 };

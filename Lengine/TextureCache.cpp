@@ -19,7 +19,7 @@ TextureCache::~TextureCache()
 {
 }
 
-GLtexture TextureCache::gettexture(const std::string& texturepath) {
+GLtexture* TextureCache::gettexture(const std::string& texturepath) {
 
 	//try to find the texture
 	auto mit = m_texturemap.find(texturepath);
@@ -29,12 +29,11 @@ GLtexture TextureCache::gettexture(const std::string& texturepath) {
 		GLtexture newTexture = loadImageFile(texturepath);
 		m_texturemap.insert(make_pair(texturepath, newTexture));
 
-		return newTexture;
-
+		return &m_texturemap[texturepath];
 	}
 
 	//find it return directly
-	return mit->second;
+	return &(mit->second);
 }
 
 /*

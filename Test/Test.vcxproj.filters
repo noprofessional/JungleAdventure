@@ -36,15 +36,6 @@
     <ClCompile Include="Box.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="LevelWriterNReader.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="MenuScreen.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="EditScreen.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -66,15 +57,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Box.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="LevelWriterNReader.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MenuScreen.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="EditScreen.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

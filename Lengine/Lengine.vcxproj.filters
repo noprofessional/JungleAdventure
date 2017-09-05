@@ -54,9 +54,6 @@
     <ClCompile Include="ParticleEngine.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ResourceManager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ScreenList.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -76,6 +73,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SpriteFont.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleBatch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -117,9 +117,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ParticleEngine.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ScreenList.h">

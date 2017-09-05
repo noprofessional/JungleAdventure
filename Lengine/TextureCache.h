@@ -16,7 +16,7 @@ namespace Lengine {
 	public:
 		TextureCache();
 		~TextureCache();
-		GLtexture gettexture(const std::string& texturepath);
+		GLtexture* gettexture(const std::string& texturepath);
 	private:
 		std::map<std::string, GLtexture> m_texturemap;
 	};

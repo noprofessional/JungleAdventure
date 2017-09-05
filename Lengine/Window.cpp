@@ -36,7 +36,6 @@ bool Window::create(std::string windowname, int screenwidth, int screenheight, u
 
 	_screenwidth = screenwidth;
 	_screenheight = screenheight;
-
 	_window = SDL_CreateWindow(windowname.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenwidth, screenheight, flags);
 		
 	//check if window generate correctly

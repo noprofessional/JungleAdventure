@@ -22,7 +22,7 @@ void App::init() {
 
 	Lengine::IScreen* p = new MenuScreen(this);
 	m_list.addScreen(p);
-	m_list.setScreen(p->getScreenIndex());
+	m_list.setStartScreen(p->getScreenIndex());
 
 	p = new GameScreen(this);
 	m_list.addScreen(p);

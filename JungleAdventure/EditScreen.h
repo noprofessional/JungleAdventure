@@ -74,6 +74,7 @@ private:
 	bool onRigidButtonClicked(const CEGUI::EventArgs& ea);
 	bool onDynamicButtonClicked(const CEGUI::EventArgs& ea);
 	bool onMovableButtonClicked(const CEGUI::EventArgs& ea);
+	bool onVoidButtonClicked(const CEGUI::EventArgs& ea);
 	bool onWidthSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onHeightSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onAngleSpinnerChanged(const CEGUI::EventArgs& ea);
@@ -104,6 +105,7 @@ private:
 	CEGUI::RadioButton* b_rigid = nullptr;
 	CEGUI::RadioButton* b_dynamic = nullptr;
 	CEGUI::RadioButton* b_movable = nullptr;
+	CEGUI::RadioButton* b_void = nullptr;
 	CEGUI::Spinner* sp_width = nullptr;
 	CEGUI::Spinner* sp_height = nullptr;
 	CEGUI::Spinner* sp_angle = nullptr;
@@ -134,14 +136,15 @@ private:
 
 	bool m_debuging = false;
 	bool m_movingObject = false;
+	bool m_needUpdate = false;
 	glm::vec2 m_mouseCords;
 	CEGUI::Vector2f m_mouseUICords;
 	glm::vec2 m_dimension;
 	float m_angle;
 	float m_size;
 	Lengine::ColorRGBA8 m_color;
-	Lengine::GLtexture m_texture;
-	Lengine::GLtexture m_playerTexture;
+	Lengine::GLtexture* m_texture;
+	Lengine::GLtexture* m_playerTexture;
 
 	std::unique_ptr<b2World> m_world;
 

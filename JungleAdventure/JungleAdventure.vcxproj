@@ -22,6 +22,7 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Box.cpp" />
     <ClCompile Include="Capsule.cpp" />
+    <ClCompile Include="ContactListener.cpp" />
     <ClCompile Include="EditScreen.cpp" />
     <ClCompile Include="GameScreen.cpp" />
     <ClCompile Include="LevelWriterNReader.cpp" />
@@ -34,6 +35,7 @@
     <ClInclude Include="App.h" />
     <ClInclude Include="Box.h" />
     <ClInclude Include="Capsule.h" />
+    <ClInclude Include="ContactListener.h" />
     <ClInclude Include="EditScreen.h" />
     <ClInclude Include="GameScreen.h" />
     <ClInclude Include="LevelWriterNReader.h" />

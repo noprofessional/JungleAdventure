@@ -1,8 +1,8 @@
 #pragma once
-#include<functional>
-#include<glm/glm.hpp>
-#include"Vertex.h"
-#include"ResourceManager.h"
+#include <functional>
+#include <glm/glm.hpp>
+#include "Vertex.h"
+#include "TextureCache.h"
 namespace Lengine {
 
 	class SpriteBatch;

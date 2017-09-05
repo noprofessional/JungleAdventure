@@ -7,10 +7,6 @@
 #include<Lengine/SpriteBatch.h>
 #include <Lengine/DebugRender.h>
 #include<Lengine/GUI.h>
-
-#include "Player.h"
-#include "Light.h"
-#include "Box.h"
 class GameScreen:public Lengine::IScreen
 {
 public:
@@ -27,16 +23,10 @@ private:
 
 	Lengine::Camera m_camera;
 	Lengine::ShaderPro m_program;
-	Lengine::ShaderPro m_lightPro;
 	Lengine::SpriteBatch m_spriteBatch;
-	Lengine::SpriteBatch m_lightBatch;
+	Lengine::SpriteBatch m_secondBatch;
 	Lengine::DebugRender m_debugRender;
 	Lengine::GUI m_gui;
 	CEGUI::PushButton* m_pushButton;
-
-	std::unique_ptr<b2World>m_world;
-	Player m_player;
-	std::vector<Light> m_lights;
-	std::vector<Box> m_boxes;
 };
 

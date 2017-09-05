@@ -1,5 +1,5 @@
 #include "SpriteBatch.h"
-#include"ResourceManager.h"
+#include "TextureCache.h"
 namespace Lengine {
 
 	Glyph::Glyph() {}
@@ -71,9 +71,8 @@ namespace Lengine {
 
 	//add a basic no texture glypth into thd Glyphs
 	void SpriteBatch::draw(const glm::vec4& recpos, const float & depth, const ColorRGBA8& color) {
-		TextureCache temp;
-		static GLtexture whitePNG= temp.gettexture("Textures/white.png");
-		draw(recpos, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), whitePNG.ids[0], depth, color);
+		static GLtexture* whitePNG= textureCache.gettexture("Textures/white.png");
+		draw(recpos, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), whitePNG->ids[0], depth, color);
 	}
 
 	void SpriteBatch::draw(const glm::vec4 &recpos, const glm::vec4& recuv, const GLuint& textureID

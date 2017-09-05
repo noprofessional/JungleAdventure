@@ -15,7 +15,7 @@ public:
 	b2Body*				getbody()		{ return m_body; }
 
 private:
-	b2Body* m_body;
+	b2Body* m_body = nullptr;
 	b2Fixture* m_fixtures[3];
 	glm::vec2 m_dimension;
 };

@@ -10,13 +10,17 @@ namespace Lengine{
 
 	ScreenList::~ScreenList()
 	{
-		for (int i = 0; i < m_screenlist.size();i++) {
-			if (m_screenlist[i] != nullptr) {
-				//in case delete nullptr
-				delete m_screenlist[i];
-			}
+		//for (int i = 0; i < m_screenlist.size();i++) {
+		//	if (m_screenlist[i] != nullptr) {
+		//		//in case delete nullptr
+		//		delete m_screenlist[i];
+		//	}
+		//}
+		//m_screenlist.clear();
+		for (int i = 0;i < m_screenMap.size();i++) {
+			delete m_screenMap[i];
 		}
-		m_screenlist.clear();
+		m_screenMap.clear();
 	}
 
 	IScreen*  ScreenList::update()
@@ -29,12 +33,14 @@ namespace Lengine{
 			break;
 		case ScreenState::TO_NEXT:
 			p->onExit();
-			p = getNextScreen();
+			m_currentscreenindex = p->getNextScreenIndex();
+			p = getCurrentScreen();
 			p->onEntry();
 			break;
 		case ScreenState::TO_PREVIOUS:
 			p->onExit();
-			p=getPreviousScreen();
+			m_currentscreenindex = p->getPreviousScreenIndex();
+			p = getCurrentScreen();
 			p->onEntry();
 			break;
 		default:
@@ -45,75 +51,60 @@ namespace Lengine{
 
 	void ScreenList::addScreen(IScreen* screen)
 	{
-		if (screen != nullptr) {
-			//only add valid screen to the screen
-			if (m_screenlist.size() <= screen->getScreenIndex()) {
-				//resize when index is out of range
-				//means some member can be nullptr
-				m_screenlist.resize(screen->getScreenIndex() + 1);
-			}
-			m_screenlist[screen->getScreenIndex()] = screen;
+		if (screen!= nullptr) {
+			m_screenMap.insert(std::make_pair(screen->getScreenIndex(), screen));
 		}
 		else {
 			fatalError("Screen pointer is null!\n");
 		}
+		//if (screen != nullptr) {
+		//	//only add valid screen to the screen
+		//	if (m_screenlist.size() <= screen->getScreenIndex()) {
+		//		//resize when index is out of range
+		//		//means some member can be nullptr
+		//		m_screenlist.resize(screen->getScreenIndex() + 1);
+		//	}
+		//	m_screenlist[screen->getScreenIndex()] = screen;
+		//}
+		//else {
+		//	fatalError("Screen pointer is null!\n");
+		//}
 
 	}
-	void ScreenList::setScreen(int screenIndex) {
-		if (m_currentscreenindex != -1) {
-			//if there is a current screen exit it
-			getCurrentScreen()->onExit();
-		}
-		//set current screen index
-		m_currentscreenindex = screenIndex;
-		//Entry the required screen
-		getCurrentScreen()->onEntry();
 
+	void ScreenList::setStartScreen(int screenIndex) {
+		//if (m_currentscreenindex != -1) {
+		//	//if there is a current screen exit it
+		//	getCurrentScreen()->onExit();
+		//}
+		////set current screen index
+		//m_currentscreenindex = screenIndex;
+		////Entry the required screen
+		//getCurrentScreen()->onEntry();
+
+		m_currentscreenindex = screenIndex;
+		getCurrentScreen()->onEntry();
 	}
 
 	IScreen*  ScreenList::getCurrentScreen()
 	{
-		if (m_currentscreenindex < m_screenlist.size()) {
-			return m_screenlist[m_currentscreenindex];
-		}
-		else {
-			fatalError("Screen Index OUT OF RANGE!");
-		}
-	}
-	IScreen* ScreenList::getNextScreen() {
-		int nextIndex = getCurrentScreen()->getNextScreenIndex();
-		if (nextIndex != -1) {
-			//if screen index set correctly
-			m_currentscreenindex = nextIndex;
-			IScreen* p = getCurrentScreen();
-			if (p != nullptr) {
-				return m_screenlist[nextIndex];
-			}
-			else {
-				fatalError("There is no next screen!");
-			}
-		}
-		else {
-			fatalError("Next Screen Index invalid!");
-		}
-	}
-	IScreen* ScreenList::getPreviousScreen() {
-		int preIndex = getCurrentScreen()->getPreviousScreenIndex();
-		if (preIndex != -1) {
-			//if screen index set correctly
-			m_currentscreenindex = preIndex;
-			IScreen* p = getCurrentScreen();
-			if (p!= nullptr) {
-				return p;
-			}
-			else {
-				fatalError("There is no Previous screen!");
-			}
-		}
-		else {
-			fatalError("Previous Screen Index invalid!");
-		}
+		return findScreen(m_currentscreenindex);
+
+		//if (m_currentscreenindex < m_screenlist.size()) {
+		//	return m_screenlist[m_currentscreenindex];
+		//}
+		//else {
+		//	fatalError("Screen Index OUT OF RANGE!");
+		//}
 	}
 
-	
+	IScreen* ScreenList::findScreen(int ScreenIndex) {
+		auto It = m_screenMap.find(ScreenIndex);
+		if (It != m_screenMap.end()) {
+			return It->second;
+		}
+		else {
+			fatalError("There is NO screen " + std::to_string(ScreenIndex));
+		}
+	}
 }

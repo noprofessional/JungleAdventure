@@ -2,6 +2,7 @@
 #include "ScreenIdentifier.h"
 #include <Lengine/TextureCache.h>
 #include "LevelWriterNReader.h"
+#include "ContactListener.h"
 GameScreen::GameScreen(Lengine::IMainGame* ownergame):IScreen(ownergame,GAME_SCREEN)
 {
 }
@@ -33,7 +34,7 @@ void GameScreen::build() {
 	m_lightBatch.init();
 
 	m_debugRender.init();
-	m_debuging = true;
+	m_debuging = false;
 
 	m_camera.init(WINDOW_WIDTH,WINDOW_HEIGHT);
 	m_camera.setposition(glm::vec2(0.0f,0.0f));
@@ -51,8 +52,10 @@ void GameScreen::build() {
 	SDL_ShowCursor(0);
 
 	//set the gravity of the world
-	b2Vec2 Gravity(0.0f, -20.0f);
+	b2Vec2 Gravity(0.0f, -10.0f);
 	m_world = std::make_unique<b2World>(Gravity);
+	static ContactListener contactListener;
+	m_world->SetContactListener(&contactListener);
 
 	//load the level add to the world
 	LevelWriterNReader::readAsText("Levels/level1.txt", m_player, m_boxes, m_lights);
@@ -77,7 +80,6 @@ void GameScreen::update() {
 	m_world->Step(1.0f / 60.0f, 8, 3);
 	m_camera.change();
 	m_player.update(m_game->getInputManager());
-	m_game->getInputManager()->update();
 }
 void GameScreen::draw() {
 
@@ -91,36 +93,39 @@ void GameScreen::draw() {
 		GLint samplerLoc = m_program.getuniformposition("mysampler");
 		glUniform1i(samplerLoc, 0);
 
-
 		GLint pLoc = m_program.getuniformposition("P");
 		glUniformMatrix4fv(pLoc, 1, GL_FALSE, &Projection[0][0]);
 
 		m_spriteBatch.begin();
 
 		m_player.draw(&m_spriteBatch);
-
 		for (auto& B : m_boxes) {
 			B.draw(&m_spriteBatch);
 		}
 		
 		m_spriteBatch.end();
+
 		m_spriteBatch.renderBatch();
 
 		m_program.unuse();
 	}
 	//light render
 	{
-		m_lightPro.use();
-		GLint pLoc = m_lightPro.getuniformposition("P");
-		glUniformMatrix4fv(pLoc, 1, GL_FALSE, &Projection[0][0]);
+
 		m_lightBatch.begin();
 		for (auto & L : m_lights) {
 			L.draw(&m_lightBatch);
 		}
 		m_lightBatch.end();
+
+		m_lightPro.use();
+		GLint pLoc = m_lightPro.getuniformposition("P");
+		glUniformMatrix4fv(pLoc, 1, GL_FALSE, &Projection[0][0]);
+
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		m_lightBatch.renderBatch();
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		m_lightPro.unuse();
 
 	}

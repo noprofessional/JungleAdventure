@@ -61,11 +61,11 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 
 	//player
 	Col= &player.getColor();
-	fileOut << player.getTempPos().x << ' '	<< player.getTempPos().y << ' '
-		<< player.getRenderDim().x << ' '	<< player.getRenderDim().y << ' '
-		<< player.getCollisionDim().x << ' '<< player.getCollisionDim().y << ' '
-		<< player.getPosOffset().x << ' '	<< player.getPosOffset().y << ' '
-		<< player.getTexture().filePath << '\n';
+	fileOut << player.getTempPos().x << ' ' << player.getTempPos().y << ' '
+		<< player.getRenderDim().x << ' ' << player.getRenderDim().y << ' '
+		<< player.getCollisionDim().x << ' ' << player.getCollisionDim().y << ' '
+		<< player.getPosOffset().x << ' ' << player.getPosOffset().y << ' '
+		<< player.getTexture()->filePath << '\n';
 
 	//boxes
 	fileOut << boxes.size() << '\n';
@@ -74,9 +74,9 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 		fileOut << B.tempPos.x << ' ' << B.tempPos.y << ' '
 			<< B.dimension.x << ' ' << B.dimension.y << ' '
 			<< B.tempAngle << ' '
-			<<int(B.physicMode)<<' '
+			<<B.physicMode<<' '
 			<< Col->r << ' ' << Col->g << ' ' << Col->b << ' ' << Col->a << ' '
-			<< B.texture.filePath << '\n';
+			<< B.texture->filePath << '\n';
 	}
 
 	//lights
@@ -92,7 +92,7 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 	
 void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::vector<Box>& boxes, std::vector<Light>& lights) {
 	
-	Lengine::GLtexture texture;
+	std::string texturePath;
 
 	//player load
 	{
@@ -101,10 +101,8 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 		glm::vec2 posOffset;
 		fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w 
 			>>collisionDim.x>>collisionDim.y>>posOffset.x>>posOffset.y
-			>> texture.filePath;
-		texture = Lengine::textureCache.gettexture(texture.filePath);
-		std::cout << posOffset.y;
-		player.tempSetAll(desRec, collisionDim,posOffset,texture);
+			>> texturePath;
+		player.tempSetAll(desRec, collisionDim,posOffset, Lengine::textureCache.gettexture(texturePath));
 	}
 	//boxes load
 	{
@@ -120,21 +118,22 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 
 		for (int i = 0;i < size;i++) {
 			fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w >> angle >> physicModeCode
-				>> color.r >> color.g >> color.b >> color.a >> texture.filePath;
+				>> color.r >> color.g >> color.b >> color.a >> texturePath;
 			switch (physicModeCode)
 			{
-			case int(PhysicMode::DYNAMIC) :
+			case PhysicMode::DYNAMIC :
 				physicMode = PhysicMode::DYNAMIC;
 				break;
-			case int(PhysicMode::RIGID) :
+			case PhysicMode::RIGID :
 				physicMode = PhysicMode::RIGID;
 				break;
-			case int(PhysicMode::MOVABLE) :
+			case PhysicMode::MOVABLE :
 				physicMode = PhysicMode::MOVABLE;
+			case PhysicMode::VOIDSPACE :
+				physicMode = PhysicMode::VOIDSPACE;
 				break;
 			}
-			texture = Lengine::textureCache.gettexture(texture.filePath);
-			boxes[i].tempSetAll(desRec, angle, color, texture, physicMode);
+			boxes[i].tempSetAll(desRec, angle, color, Lengine::textureCache.gettexture(texturePath), physicMode);
 		}
 	}
 	//lights load

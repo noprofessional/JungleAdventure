@@ -2,16 +2,16 @@
 #include "ScreenIdentifier.h"
 #include "LevelWriterNReader.h"
 #include <Lengine/IMainGame.h>
-#include <Lengine/ResourceManager.h>
 #include <iostream>
 #include <Lengine\FileIO.h>
 #include <Lengine\TextureCache.h>
+#include <Lengine/fatalError.h>
 
 const float LIGHT_SELECT_RADIUS = 0.5f;
 const Lengine::ColorRGBA8 WHITE(255, 255, 255, 255);
-const glm::vec2 PLAYER_RENDER_DIM(64.0f, 64.0f);
-const glm::vec2 PLAYER_POS_OFFSET(0.0f, -4.0f);
-const glm::vec2 PLAYER_COLLISOIN_DIM(32.0f, 56.0f);
+const glm::vec2 PLAYER_RENDER_DIM(2.0f, 2.0f);
+const glm::vec2 PLAYER_POS_OFFSET(0.0f, -0.15f);
+const glm::vec2 PLAYER_COLLISOIN_DIM(1.0f, 1.75f);
 
 
 EditScreen::EditScreen(Lengine::IMainGame* ownergame):IScreen(ownergame,EDIT_SCREEN)
@@ -34,7 +34,7 @@ void EditScreen::build()
 
 	m_camera.init(SCREEN_WIDTH, SCREEN_HEIGHT);
 	m_camera.setposition(glm::vec2(0.0f, 0.0f));
-	m_camera.setscale(1.0f);
+	m_camera.setscale(32.0f);
 
 	m_program.compileshaders(std::string("Shaders/shaderpro.vert"), std::string("Shaders/shaderpro.frag"));
 	m_program.addattribute("vertexPosition", Lengine::POS);
@@ -58,8 +58,8 @@ void EditScreen::build()
 	b2Vec2 gravity(0.0f, -9.8f);
 	m_world = std::make_unique<b2World>(gravity);
 
-	m_texture = Lengine::ResourceManager::gettexture("Textures/white.png");
-	m_playerTexture = Lengine::ResourceManager::gettexture("Textures/spr_m_traveler_idle_anim.gif");
+	m_texture = Lengine::textureCache.gettexture("Textures/white.png");
+	m_playerTexture = Lengine::textureCache.gettexture("Textures/spr_m_traveler_idle_anim.gif");
 
 	initUI();
 }
@@ -168,7 +168,7 @@ void EditScreen::initUI() {
 			glm::vec4 buttonSizeRec(0.0f, 0.0f, 20.0f, 20.0f);
 			float xPixelPos = 30.0f;
 			float yPixelPos = yPixelOPoint - 115.0f;
-			float deltaXPixel = 63.0f;
+			float deltaXPixel = 50.0f;
 			b_rigid = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), buttonSizeRec, "Group1/RigidButton", temp));
 			b_rigid->setGroupID(GROUP_ID_TWO);
 			b_rigid->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onRigidButtonClicked, this));
@@ -180,6 +180,10 @@ void EditScreen::initUI() {
 			b_movable = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + 2 * deltaXPixel, yPixelPos), buttonSizeRec, "Group1/MovableButton", temp));
 			b_movable->setGroupID(GROUP_ID_TWO);
 			b_movable->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onMovableButtonClicked, this));
+			
+			b_void = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + 3 * deltaXPixel, yPixelPos), buttonSizeRec, "Group1/VoidButton", temp));
+			b_void->setGroupID(GROUP_ID_TWO);
+			b_void->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onVoidButtonClicked, this));
 		}
 		//width, height and angle
 		{
@@ -215,6 +219,7 @@ void EditScreen::initUI() {
 			float yPixelPos3 = yPixelOPoint - 240.0f;
 			cb_texture = static_cast<CEGUI::Combobox*>(m_gui.createWidget("TaharezLook/Combobox", glm::vec4(0.0f, 0.0f, xPixelPos3, yPixelPos3), comboBoxSizeRec, "Group/TextureComboBox", temp));
 			cb_texture->subscribeEvent(CEGUI::Combobox::EventTextAccepted, CEGUI::Event::Subscriber(&EditScreen::onTextureInput, this));
+			addListToComboBox("Textures/Tiles", cb_texture);
 		}
 	}
 	//light widget
@@ -289,10 +294,11 @@ void EditScreen::initUI() {
 		sp_width->setCurrentValue(1.0f);
 		sp_height->setCurrentValue(1.0f);
 		sp_angle->setCurrentValue(0.0f);
-		sp_size->setCurrentValue(320.0f);
+		sp_size->setCurrentValue(10.0f);
 		//frame window invisable
 		w_file->setVisible(false);
 	}
+
 }
 
 void EditScreen::destroy()
@@ -325,29 +331,28 @@ void EditScreen::update()
 {
 	m_UIcamera.change();
 	m_camera.change();
-	m_game->getInputManager()->update();
 
-	if (m_selectMode == SelectionMode::SELECT) {
-		if (m_currentObjectIndex != -1) {
-			//update any select temp object
-			if (m_objectMode == ObjectMode::PLATFORM) {
-				Box& b = m_boxes[m_currentObjectIndex];
-				moveObject(b.tempPos);
-				b.texture = m_texture;
-				b.color = m_color;
-				b.dimension = m_dimension;
-				b.tempAngle = m_angle;
-			}else if (m_objectMode == ObjectMode::LIGHT) {
-				Light& L = m_lights[m_currentObjectIndex];
-				moveObject(L.centerPos);
-				L.color = m_color;
-				L.size = m_size;
-			}
-			else {
-				moveObject(m_player.getTempPosReference());
-				m_player.tempSetAll(glm::vec4(m_player.getTempPos(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
-			}
+	if (m_needUpdate && m_selectMode == SelectionMode::SELECT && m_currentObjectIndex != -1) {
+		//update any select temp object
+		if (m_objectMode == ObjectMode::PLATFORM) {
+			Box& b = m_boxes[m_currentObjectIndex];
+			//moveObject(b.tempPos);
+			b.texture = m_texture;
+			b.color = m_color;
+			b.dimension = m_dimension;
+			b.tempAngle = m_angle;
+			b.physicMode = m_physicMode;
+		}else if (m_objectMode == ObjectMode::LIGHT) {
+			Light& L = m_lights[m_currentObjectIndex];
+			//moveObject(L.centerPos);
+			L.color = m_color;
+			L.size = m_size;
 		}
+		else {
+			//moveObject(m_player.getTempPosReference());
+			m_player.tempSetAll(glm::vec4(m_player.getTempPos(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
+		}
+		m_needUpdate = false;
 	}
 	//m_world->Step(1.0/60.0f,3,8);
 }
@@ -378,18 +383,16 @@ void EditScreen::drawScreen(){
 		glm::vec2 alignedPos = getMouseWorldCords();
 		for (auto& B : m_boxes) {
 			if (B.isInBox(getMouseWorldCords())) {
-				//change it if is in a box
+				//only change it if is in a box
 				glm::vec2 desVec = getMouseWorldCords() - B.tempPos;
 				if (desVec.x > 0 && abs(desVec.y) <= desVec.x)
-				{
-					alignedPos = B.tempPos + glm::vec2((B.texture.width + m_texture.width) / 2.0f, 0.0f);
-				}
+					alignedPos = B.tempPos + glm::vec2((B.dimension.x + m_dimension.x) / 2.0f, 0.0f);
 				else if (desVec.x < 0 && abs(desVec.y) <= -desVec.x)
-					alignedPos = B.tempPos - glm::vec2((B.texture.width +m_texture.width) / 2.0f, 0.0f);
+					alignedPos = B.tempPos - glm::vec2((B.dimension.x + m_dimension.x) / 2.0f, 0.0f);
 				else if (desVec.y > 0 && abs(desVec.x) <= desVec.y)
-					alignedPos = B.tempPos + glm::vec2(0.0f, (B.texture.height + m_texture.height) / 2.0f);
+					alignedPos = B.tempPos + glm::vec2(0.0f, (B.dimension.y + m_dimension.y) / 2.0f);
 				else
-					alignedPos = B.tempPos - glm::vec2(0.0f, (B.texture.height + m_texture.height) / 2.0f);
+					alignedPos = B.tempPos - glm::vec2(0.0f, (B.dimension.y + m_dimension.y) / 2.0f);
 				break;
 			}
 		}
@@ -397,7 +400,8 @@ void EditScreen::drawScreen(){
 		if (m_objectMode == ObjectMode::PLATFORM) {
 			m_tempBox.tempSetAll(glm::vec4(alignedPos,m_dimension), m_angle, m_color, m_texture, m_physicMode);
 			m_tempBox.tempDraw(&m_spriteBatch);
-		}else if (m_objectMode == ObjectMode::PLAYER) {
+		}
+		else if (m_objectMode == ObjectMode::PLAYER) {
 			m_tempPlayer.tempSetAll(glm::vec4(getMouseWorldCords(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
 			m_tempPlayer.tempDraw(&m_spriteBatch);
 		}
@@ -407,7 +411,7 @@ void EditScreen::drawScreen(){
 	for (int i = 0;i < m_boxes.size();i++) {
 		m_boxes[i].tempDraw(&m_spriteBatch);
 	}
-	if (m_player.getTexture().ids.size() != 0) {
+	if (m_player.getTexture()) {
 		//Only draw there is a player 
 		m_player.tempDraw(&m_spriteBatch);
 	}
@@ -583,7 +587,7 @@ void EditScreen::setSelectObject(ObjectMode objectMode, int index) {
 		s_green->setCurrentValue(m_boxes[index].color.g);
 		s_blue->setCurrentValue(m_boxes[index].color.b);
 		s_alpha->setCurrentValue(m_boxes[index].color.a);
-		cb_texture->setText(CEGUI::String(m_boxes[index].texture.filePath));
+		cb_texture->setText(CEGUI::String(m_boxes[index].texture->filePath));
 		m_texture = m_boxes[index].texture;
 		switch (m_boxes[index].physicMode) {
 		case PhysicMode::RIGID:
@@ -595,6 +599,8 @@ void EditScreen::setSelectObject(ObjectMode objectMode, int index) {
 		case PhysicMode::MOVABLE:
 			b_movable->setSelected(true);
 			break;
+		case  PhysicMode::VOIDSPACE:
+			b_void->setSelected(true);
 		}
 		break;
 	case ObjectMode::LIGHT:
@@ -609,26 +615,30 @@ void EditScreen::setSelectObject(ObjectMode objectMode, int index) {
 	}
 	m_currentObjectIndex = index;
 }
-void EditScreen::moveObject(glm::vec2& pos) {
-	const float STEP_LENGTH = 0.01f;
-	Lengine::InputManager* im = m_game->getInputManager();
-	if (im->isKEYdown(SDLK_RIGHT)) {
-		pos.x += STEP_LENGTH;
-	}
-	else if(im->isKEYdown(SDLK_LEFT)) {
-		pos.x -= STEP_LENGTH;
-	}
-	if (im->isKEYdown(SDLK_UP)) {
-		pos.y += STEP_LENGTH;
-	}
-	else if (im->isKEYdown(SDLK_DOWN)) {
-		pos.y -= STEP_LENGTH;
-	}
-}
+//void EditScreen::moveObject(glm::vec2& pos) {
+//	const float STEP_LENGTH = 0.01f;
+//	Lengine::InputManager* im = m_game->getInputManager();
+//	if (im->isKEYdown(SDLK_RIGHT)) {
+//		pos.x += STEP_LENGTH;
+//	}
+//	else if(im->isKEYdown(SDLK_LEFT)) {
+//		pos.x -= STEP_LENGTH;
+//	}
+//	if (im->isKEYdown(SDLK_UP)) {
+//		pos.y += STEP_LENGTH;
+//	}
+//	else if (im->isKEYdown(SDLK_DOWN)) {
+//		pos.y -= STEP_LENGTH;
+//	}
+//}
 
 void EditScreen::addListToComboBox(const char* desDirectory,CEGUI::Combobox* comboBox) {
 	//create if not exist, else do nothing
 	Lengine::FileIO::createDirectory(desDirectory);
+
+	//get all directory entries and add to the Item list
+	std::vector<Lengine::DivEntry> divEntries;
+	Lengine::FileIO::getDirectoryEntries(desDirectory, divEntries);
 
 	//clear selection state
 	comboBox->clearAllSelections();
@@ -639,10 +649,6 @@ void EditScreen::addListToComboBox(const char* desDirectory,CEGUI::Combobox* com
 	}
 	//clear actual items
 	m_items.clear();
-
-	//get all directory entries and add to the Item list
-	std::vector<Lengine::DivEntry> divEntries;
-	Lengine::FileIO::getDirectoryEntries(desDirectory, divEntries);
 
 	//add the file ones to the item list and add to the comboBox
 	for (auto& E : divEntries) {
@@ -658,6 +664,7 @@ void EditScreen::setPlatformWidgetVisible(bool visibility) {
 	b_rigid->setVisible(visibility);
 	b_dynamic->setVisible(visibility);
 	b_movable->setVisible(visibility);
+	b_void->setVisible(visibility);
 
 	sp_width->setVisible(visibility);
 	sp_height->setVisible(visibility);
@@ -721,16 +728,14 @@ bool EditScreen::onMouseClicked(const CEGUI::EventArgs& ea) {
 			}
 			return true;
 	}
-	else if (M.button == CEGUI::RightButton && m_selectMode == SelectionMode::SELECT&&m_currentObjectIndex == -1) {
+	else if (M.button == CEGUI::RightButton&&m_selectMode == SelectionMode::PLACE) {
 		for (auto& B : m_boxes) {
 			if (B.isInBox(m_mouseCords)) {
-				std::cout << 1;
 				B = m_boxes.back();
 				m_boxes.pop_back();
 				break;
 			}
 		}
-
 		for (auto&L : m_lights) {
 			if (L.isInLight(m_mouseCords)) {
 				L = m_lights.back();
@@ -771,9 +776,7 @@ bool EditScreen::onMouseDown(const CEGUI::EventArgs& ea) {
 			}
 		}
 		//check if mouse is in player
-		tempVec = m_mouseCords - m_player.getTempPos();
-		glm::vec2 tempDim = m_player.getRenderDim();
-		if ((abs(tempVec.x) < tempDim.x / 2.0f) && (abs(tempVec.y) < tempDim.y / 2.0f))
+		if (m_player.isInPlayer(m_mouseCords))
 		{
 			//there is only one player
 			setSelectObject(ObjectMode::PLAYER, 0);
@@ -824,20 +827,24 @@ bool EditScreen::onMouseUp(const CEGUI::EventArgs& ea) {
 bool EditScreen::onRedSlideChange(const CEGUI::EventArgs& ea)
 {
 	m_color.r = GLubyte(s_red->getCurrentValue());
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onGreenSlideChange(const CEGUI::EventArgs& ea)
 {
 	m_color.g = GLubyte(s_green->getCurrentValue());
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onBlueSlideChange(const CEGUI::EventArgs& ea)
 {
 	m_color.b = GLubyte(s_blue->getCurrentValue());
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onAlphaSliderChange(const CEGUI::EventArgs& ea) {
 	m_color.a = GLubyte(s_alpha->getCurrentValue());
+	m_needUpdate = true;
 	return true;
 }
 
@@ -883,7 +890,6 @@ bool EditScreen::onPlatformSelected(const CEGUI::EventArgs& ea) {
 		m_color.a = 255;
 		setLightWidgetVisible(false);
 		setPlatformWidgetVisible(true);
-		addListToComboBox("Textures/Tiles", cb_texture);
 	}
 	return true;
 }
@@ -899,38 +905,52 @@ bool EditScreen::onLightSelected(const CEGUI::EventArgs& ea) {
 bool EditScreen::onRigidButtonClicked(const CEGUI::EventArgs& ea) {
 	if (b_rigid->isSelected())
 		m_physicMode = PhysicMode::RIGID;
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onDynamicButtonClicked(const CEGUI::EventArgs& ea) {
 	if (b_dynamic->isSelected())
 		m_physicMode = PhysicMode::DYNAMIC;
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onMovableButtonClicked(const CEGUI::EventArgs& ea) {
 	if (b_movable->isSelected())
 		m_physicMode = PhysicMode::MOVABLE;
+	m_needUpdate = true;
+	return true;
+}
+bool EditScreen::onVoidButtonClicked(const CEGUI::EventArgs& ea) {
+	if (b_void->isSelected())
+		m_physicMode = PhysicMode::VOIDSPACE;
+	m_needUpdate = true;
 	return true;
 }
 
 bool EditScreen::onWidthSpinnerChanged(const CEGUI::EventArgs& ea) {
 	m_dimension.x = sp_width->getCurrentValue();
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onHeightSpinnerChanged(const CEGUI::EventArgs& ea) {
 	m_dimension.y = sp_height->getCurrentValue();
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onAngleSpinnerChanged(const CEGUI::EventArgs& ea) {
 	m_angle = sp_angle->getCurrentValue();
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onTextureInput(const CEGUI::EventArgs& ea) {
 	std::string texturePath(cb_texture->getText().c_str());
 	m_texture = Lengine::textureCache.gettexture("Textures/Tiles/" + texturePath);
+	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onSizeSpinnerChanged(const CEGUI::EventArgs& ea) {
 	m_size = sp_size->getCurrentValue();
+	m_needUpdate = true;
 	return true;
 }
 
@@ -967,7 +987,12 @@ bool EditScreen::onOKButtonClicked(const CEGUI::EventArgs& ea) {
 	switch (m_fileMode)
 	{
 	case FileMode::SAVE:
-		LevelWriterNReader::saveAsText(filePath, m_player, m_boxes, m_lights);
+		if (m_player.getTexture()) {
+			LevelWriterNReader::saveAsText(filePath, m_player, m_boxes, m_lights);
+		}
+		else {
+			std::cout<<"Can't save without Player!\nPlease try angain after adding a player";
+		}
 		break;
 	case FileMode::LOAD:
 		LevelWriterNReader::readAsText(filePath, m_player, m_boxes, m_lights);

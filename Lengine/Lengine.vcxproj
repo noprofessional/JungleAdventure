@@ -162,8 +162,8 @@
     <ClCompile Include="IMainGame.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="IScreen.cpp" />
+    <ClCompile Include="ParticleBatch.cpp" />
     <ClCompile Include="ParticleEngine.cpp" />
-    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="ScreenList.cpp" />
     <ClCompile Include="ShaderPro.cpp" />
     <ClCompile Include="SpriteBatch.cpp" />
@@ -186,7 +186,6 @@
     <ClInclude Include="IScreen.h" />
     <ClInclude Include="ParticleBatch.h" />
     <ClInclude Include="ParticleEngine.h" />
-    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="ScreenList.h" />
     <ClInclude Include="ShaderPro.h" />
     <ClInclude Include="SpriteBatch.h" />

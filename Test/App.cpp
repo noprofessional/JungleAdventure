@@ -1,8 +1,6 @@
 #include "App.h"
 #include<Lengine/GameEngine.h>
 #include"GameScreen.h"
-#include "MenuScreen.h"
-#include "EditScreen.h"
 #include"ScreenIdentifier.h"
 const float MAX_FPS = 60.0f;
 App::App()
@@ -20,13 +18,7 @@ void App::init() {
 
 	m_window.create("Platform Game", 1000, 700);
 
-	Lengine::IScreen* p = new MenuScreen(this);
+	Lengine::IScreen* p = new GameScreen(this);
 	m_list.addScreen(p);
-	m_list.setScreen(p->getScreenIndex());
-	
-	p = new EditScreen(this);
-	m_list.addScreen(p);
-
-	p = new GameScreen(this);
-	m_list.addScreen(p);
+	m_list.setStartScreen(p->getScreenIndex());
 }
