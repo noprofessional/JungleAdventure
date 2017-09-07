@@ -39,6 +39,14 @@ void GameScreen::build() {
 	SDL_ShowCursor(0);
 
 	m_debugRender.init();
+
+#define product(x) (x*x)
+	int a = 3;
+	int b = (a++)*(a++);
+	printf("a = %d, ", a);
+	int c = (++a)*(++a);
+	printf("b = %d, c = %d\n", b, c);
+
 }
 void GameScreen::destroy() {
 }

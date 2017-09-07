@@ -14,7 +14,8 @@ GameScreen::~GameScreen()
 
 void GameScreen::build() {
 	//window related init
-	m_game->getWindowPtr()->setcolor(0.0f, 0.0f, 0.0f, 1.0f);
+	m_background = BackGround(Lengine::ColorRGBA8(100, 100, 255, 255), 7);
+	m_background.setAsCurrent(m_game->getWindowPtr());
 	const float WINDOW_WIDTH = m_game->getWindowPtr()->getscreenwidth();
 	const float WINDOW_HEIGHT = m_game->getWindowPtr()->getscreenheight();
 
@@ -80,8 +81,11 @@ void GameScreen::update() {
 	m_world->Step(1.0f / 60.0f, 8, 3);
 	m_camera.change();
 	m_player.update(m_game->getInputManager());
+	m_background.update();
 }
 void GameScreen::draw() {
+
+	m_background.draw(&m_program, &m_spriteBatch);
 
 	glm::mat4 Projection = m_camera.getcameramatrix();
 
@@ -96,7 +100,7 @@ void GameScreen::draw() {
 		GLint pLoc = m_program.getuniformposition("P");
 		glUniformMatrix4fv(pLoc, 1, GL_FALSE, &Projection[0][0]);
 
-		m_spriteBatch.begin();
+		m_spriteBatch.begin(Lengine::GlyphSortType::BACK_TO_FRONT);
 
 		m_player.draw(&m_spriteBatch);
 		for (auto& B : m_boxes) {

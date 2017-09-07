@@ -9,7 +9,7 @@
 #include"Box.h"
 #include"Light.h"
 #include"Player.h"
-
+#include "BackGround.h"
 enum class ObjectMode {
 	PLAYER,
 	PLATFORM,
@@ -78,6 +78,7 @@ private:
 	bool onWidthSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onHeightSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onAngleSpinnerChanged(const CEGUI::EventArgs& ea);
+	bool onDepthSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onTextureInput(const CEGUI::EventArgs& ea);
 	bool onSizeSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onSaveButtonClicked(const CEGUI::EventArgs& ea);
@@ -109,6 +110,7 @@ private:
 	CEGUI::Spinner* sp_width = nullptr;
 	CEGUI::Spinner* sp_height = nullptr;
 	CEGUI::Spinner* sp_angle = nullptr;
+	CEGUI::Spinner* sp_depth = nullptr;
 	CEGUI::Combobox* cb_texture = nullptr;
 	CEGUI::Spinner* sp_size = nullptr;
 	CEGUI::PushButton* b_save = nullptr;
@@ -141,12 +143,11 @@ private:
 	CEGUI::Vector2f m_mouseUICords;
 	glm::vec2 m_dimension;
 	float m_angle;
+	float m_depth;
 	float m_size;
 	Lengine::ColorRGBA8 m_color;
 	Lengine::GLtexture* m_texture;
 	Lengine::GLtexture* m_playerTexture;
-
-	std::unique_ptr<b2World> m_world;
 
 	int m_currentObjectIndex = -1;
 	Player m_player;
@@ -156,6 +157,7 @@ private:
 	Player m_tempPlayer;
 	Box m_tempBox;
 	Light m_tempLight;
+	BackGround m_backGround;
 
 };
 

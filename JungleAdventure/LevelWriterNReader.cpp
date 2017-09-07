@@ -74,7 +74,8 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 		fileOut << B.tempPos.x << ' ' << B.tempPos.y << ' '
 			<< B.dimension.x << ' ' << B.dimension.y << ' '
 			<< B.tempAngle << ' '
-			<<B.physicMode<<' '
+			<< B.depth << ' '
+			<< B.physicMode << ' '
 			<< Col->r << ' ' << Col->g << ' ' << Col->b << ' ' << Col->a << ' '
 			<< B.texture->filePath << '\n';
 	}
@@ -108,6 +109,7 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 	{
 		glm::vec4 desRec;
 		float angle;
+		float depth;
 		int physicModeCode;
 		PhysicMode physicMode;
 		Lengine::ColorRGBA8 color;
@@ -117,7 +119,9 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 		boxes.resize(size);
 
 		for (int i = 0;i < size;i++) {
-			fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w >> angle >> physicModeCode
+			fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w
+				>> angle >> depth
+				>> physicModeCode
 				>> color.r >> color.g >> color.b >> color.a >> texturePath;
 			switch (physicModeCode)
 			{
@@ -133,7 +137,7 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 				physicMode = PhysicMode::VOIDSPACE;
 				break;
 			}
-			boxes[i].tempSetAll(desRec, angle, color, Lengine::textureCache.gettexture(texturePath), physicMode);
+			boxes[i].tempSetAll(desRec, angle, depth, color, Lengine::textureCache.gettexture(texturePath), physicMode);
 		}
 	}
 	//lights load

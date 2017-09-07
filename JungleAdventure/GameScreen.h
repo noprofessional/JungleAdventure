@@ -11,6 +11,7 @@
 #include "Player.h"
 #include "Box.h"
 #include "Light.h"
+#include "BackGround.h"
 class GameScreen:public Lengine::IScreen
 {
 public:
@@ -37,6 +38,7 @@ private:
 	Player m_player;
 	std::vector<Box> m_boxes;
 	std::vector<Light> m_lights;
+	BackGround m_background;
 
 	bool m_debuging = false;
 };

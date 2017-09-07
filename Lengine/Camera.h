@@ -13,6 +13,7 @@ public:
 
 	//setters
 	void setposition(const glm::vec2&newposition) { _position = newposition;m_needupdate = true; }
+	void offsetPosition(const glm::vec2& posDelta) { _position += posDelta, m_needupdate = true; }
 	void setscale(float newscale) { _scale = newscale; m_needupdate = true; }
 	void offsetScale(float scaleDelta) { _scale += scaleDelta, m_needupdate = true; }
 

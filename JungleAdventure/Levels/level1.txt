@@ -1,65 +1,65 @@
 100
 -2.90625 -2.15625 2 2 1 1.75 0 -0.15 Textures/spr_m_traveler_idle_anim.gif
 61
--3.71875 -5.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
--5.71875 -5.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_SG.png
--5.71875 -6.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_1.png
--5.71875 -7.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_1.png
--5.71875 -8.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_1.png
--4.71875 -6.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
--4.71875 -7.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
--3.71875 -6.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
--3.71875 -7.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
--4.71875 -8.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
--3.71875 -8.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
--2.71875 -5.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LEW_SG.png
--2.71875 -4.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_1.png
--2.71875 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_SG.png
--4.71875 -4.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
--3.71875 -4.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
--5.71875 -4.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_SGT.png
--2.71875 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_SGT.png
--1.71875 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
-2.28125 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
--0.71875 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
-0.28125 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
-1.28125 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
-3.28125 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGTG.png
-4.28125 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_G.png
-6.28125 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_6.png
-6.28125 1.28125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RE_B.png
-6.28125 -2.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_4.png
--4.71875 -5.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
-3.28125 -1.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_8.png
-3.28125 -0.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_6.png
--1.71875 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
--0.71875 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
-0.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
-1.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
-2.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
-5.28125 2.28125 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_BT.png
-3.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGTGT.png
-6.28125 0.28125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_2.png
-6.28125 -0.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_3.png
-6.28125 -1.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_1.png
-3.28125 0.28125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_2.png
-3.28125 1.28125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_B.png
-4.28125 1.28125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_B.png
-5.28125 1.28125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_B.png
-5.28125 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RE_G.png
-4.28125 0.28125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-5.28125 0.28125 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-5.28125 -0.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-5.28125 -1.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-4.28125 -0.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-4.28125 -1.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-4.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-5.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-5.28125 -3.71875 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
-5.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RE_GT.png
-6.28125 2.28125 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RE_BT.png
-3.28125 2.28125 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_BT.png
-4.28125 2.28125 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_BT.png
-3.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_9.png
-4.28125 -2.71875 1 1 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_GT.png
+-3.71875 -5.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
+-5.71875 -5.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_SG.png
+-5.71875 -6.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_1.png
+-5.71875 -7.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_1.png
+-5.71875 -8.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_1.png
+-4.71875 -6.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+-4.71875 -7.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+-3.71875 -6.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+-3.71875 -7.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+-4.71875 -8.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+-3.71875 -8.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+-2.71875 -5.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LEW_SG.png
+-2.71875 -4.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_1.png
+-2.71875 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_SG.png
+-4.71875 -4.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
+-3.71875 -4.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
+-5.71875 -4.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_SGT.png
+-2.71875 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_SGT.png
+-1.71875 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
+2.28125 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
+-0.71875 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
+0.28125 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
+1.28125 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
+3.28125 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGTG.png
+4.28125 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_G.png
+6.28125 -3.71875 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_6.png
+6.28125 1.28125 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RE_B.png
+6.28125 -2.71875 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_4.png
+-4.71875 -5.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SG.png
+3.28125 -1.71875 1 1 0 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_8.png
+3.28125 -0.71875 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_6.png
+-1.71875 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
+-0.71875 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
+0.28125 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
+1.28125 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
+2.28125 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGT.png
+5.28125 2.28125 1 1 0 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_BT.png
+3.28125 -2.71875 1 1 0 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_SGTGT.png
+6.28125 0.28125 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_2.png
+6.28125 -0.71875 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_3.png
+6.28125 -1.71875 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RW_1.png
+3.28125 0.28125 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_2.png
+3.28125 1.28125 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_B.png
+4.28125 1.28125 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_B.png
+5.28125 1.28125 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_B.png
+5.28125 -3.71875 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RE_G.png
+4.28125 0.28125 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+5.28125 0.28125 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+5.28125 -0.71875 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+5.28125 -1.71875 1 1 0 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+4.28125 -0.71875 1 1 0 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+4.28125 -1.71875 1 1 0 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+4.28125 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+5.28125 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+5.28125 -3.71875 1 1 0 1 0 ÿ ÿ ÿ ÿ Textures/Tiles/G_M.png
+5.28125 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RE_GT.png
+6.28125 2.28125 1 1 0 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_RE_BT.png
+3.28125 2.28125 1 1 0 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LE_BT.png
+4.28125 2.28125 1 1 0 0 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_BT.png
+3.28125 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_LW_9.png
+4.28125 -2.71875 1 1 0 1 3 ÿ ÿ ÿ ÿ Textures/Tiles/BG_G_GT.png
 0

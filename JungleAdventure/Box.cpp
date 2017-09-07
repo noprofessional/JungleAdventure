@@ -11,12 +11,14 @@ Box::~Box() {
 
 void Box::tempSetAll(const glm::vec4& desRec,
 	const float& angle,
+	const float& Depth,
 	const Lengine::ColorRGBA8& Color,
 	Lengine::GLtexture* Texture, 
 	const PhysicMode& PhysicMode) {
 	tempPos = glm::vec2(desRec.x, desRec.y);
 	dimension = glm::vec2(desRec.z, desRec.w);
 	tempAngle = angle;
+	depth = Depth;
 	color = Color;
 	texture = Texture;
 	physicMode = PhysicMode;
@@ -52,7 +54,7 @@ void Box::addToWorld(b2World* world) {
 }
 
 void Box::tempDraw(Lengine::SpriteBatch * spritebatch) {
-	spritebatch->draw(getRenderDesRec(), glm::vec4(0.0f, 0.0f, dimension.x, dimension.y), texture->ids[0], 1.0f, color, tempAngle);
+	spritebatch->draw(getRenderDesRec(), glm::vec4(0.0f, 0.0f, dimension.x, dimension.y), texture->ids[0], depth, color, tempAngle);
 }
 
 void Box::tempDebugDraw(Lengine::DebugRender* debugRenderer, bool selected /*= false*/) {
@@ -79,7 +81,7 @@ void Box::tempDebugDraw(Lengine::DebugRender* debugRenderer, bool selected /*= f
 
 void Box::draw(Lengine::SpriteBatch* spritebatch) {
 	const glm::vec4 uvrec(0.0f, 0.0f, dimension.x, dimension.y);
-	spritebatch->draw(getRenderDesRec(), uvrec, texture->ids[0], 1.0f, color,getRenderAngle());
+	spritebatch->draw(getRenderDesRec(), uvrec, texture->ids[0], depth, color,getRenderAngle());
 }
 
 void Box::debugDraw(Lengine::DebugRender * debugRenderer) {

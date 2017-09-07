@@ -25,9 +25,12 @@ EditScreen::~EditScreen()
 
 void EditScreen::build()
 {
-	m_game->getWindowPtr()->setcolor(0.5f, 0.5f, 0.5f, 1.0f);
 	const int SCREEN_WIDTH = m_game->getWindowPtr()->getscreenwidth();
 	const int SCREEN_HEIGHT = m_game->getWindowPtr()->getscreenheight();
+
+	m_backGround = BackGround(Lengine::ColorRGBA8(100, 100, 255, 255), 10);
+	m_backGround.setAsCurrent(m_game->getWindowPtr());
+
 	m_UIcamera.init(SCREEN_WIDTH,SCREEN_HEIGHT );
 	m_UIcamera.setposition(glm::vec2(0.0f, 0.0f));
 	m_UIcamera.setscale(1.0f);
@@ -55,13 +58,13 @@ void EditScreen::build()
 
 	m_debugRenderer.init();
 
-	b2Vec2 gravity(0.0f, -9.8f);
-	m_world = std::make_unique<b2World>(gravity);
-
 	m_texture = Lengine::textureCache.gettexture("Textures/white.png");
 	m_playerTexture = Lengine::textureCache.gettexture("Textures/spr_m_traveler_idle_anim.gif");
 
 	initUI();
+	m_boxes.clear();
+	m_lights.clear();
+
 }
 void EditScreen::initUI() {
 	m_gui.init("GUI");
@@ -81,7 +84,7 @@ void EditScreen::initUI() {
 
 	//group box init
 	float groupWidth = 200.0f; float& GW = groupWidth;
-	float groupHeight = 450.0f; float& GH = groupHeight;
+	float groupHeight = 500.0f; float& GH = groupHeight;
 	float Margin = 10.0f;
 	CEGUI::Window* temp = m_gui.createWidget("TaharezLook/GroupBox",glm::vec4(0.0f, 1.0f, GW / 2.0f + Margin, -GH / 2.0f - Margin),glm::vec4(0.0f, 0.0f, GW, GH), "Group1");
 	m_group = static_cast<CEGUI::GroupBox*>(temp);
@@ -90,7 +93,7 @@ void EditScreen::initUI() {
 	m_group->subscribeEvent(CEGUI::GroupBox::EventMouseDoubleClick, CEGUI::Event::Subscriber(&EditScreen::onWindowSelecte, this));
 	m_group->subscribeEvent(CEGUI::GroupBox::EventMouseButtonUp, CEGUI::Event::Subscriber(&EditScreen::onMouseUp, this));
 
-	float yPixelOPoint = 385.0f;
+	float yPixelOPoint = 440.0f;
 	//three slider init and bound to the group box
 	{
 		m_color = Lengine::ColorRGBA8(255, 255, 255, 255);
@@ -166,7 +169,7 @@ void EditScreen::initUI() {
 		{
 			const int GROUP_ID_TWO = 2;
 			glm::vec4 buttonSizeRec(0.0f, 0.0f, 20.0f, 20.0f);
-			float xPixelPos = 30.0f;
+			float xPixelPos = 20.0f;
 			float yPixelPos = yPixelOPoint - 115.0f;
 			float deltaXPixel = 50.0f;
 			b_rigid = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), buttonSizeRec, "Group1/RigidButton", temp));
@@ -187,9 +190,10 @@ void EditScreen::initUI() {
 		}
 		//width, height and angle
 		{
-			float xPixelPos = 30.0f;
+			float xPixelPos = 50.0f;
 			float yPixelPos = yPixelOPoint - 150.0f;
-			float deltaXPixel = 60.0f;
+			float deltaXPixel = 75.0f;
+			float deltaYPixel = -40.0f;
 			glm::vec4 sizeRec(0.0f, 0.0f, 55.0f, 25.0f);
 			sp_width = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), sizeRec, "Group/WidthSpinner", temp));
 			sp_width->setMinimumValue(0.0f);
@@ -198,25 +202,32 @@ void EditScreen::initUI() {
 			sp_width->setTextInputMode(CEGUI::Spinner::FloatingPoint);
 			sp_width->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onWidthSpinnerChanged, this));
 
-			sp_height = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos+deltaXPixel, yPixelPos), sizeRec, "Group/HeightSpinner", temp));
+			sp_height = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos + deltaXPixel, yPixelPos), sizeRec, "Group/HeightSpinner", temp));
 			sp_height->setMinimumValue(0.0f);
 			sp_height->setMaximumValue(1000.0f);
 			sp_height->setStepSize(0.1f);
 			sp_height->setTextInputMode(CEGUI::Spinner::FloatingPoint);
 			sp_height->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onHeightSpinnerChanged, this));
 
-			sp_angle = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos + 2 * deltaXPixel, yPixelPos ), sizeRec, "Group/AngleSpinner", temp));
+			sp_angle = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos , yPixelPos+deltaYPixel ), sizeRec, "Group/AngleSpinner", temp));
 			sp_angle->setMinimumValue(0.0f);
 			sp_angle->setMaximumValue(360.0f);
 			sp_angle->setStepSize(0.1f);
 			sp_angle->setTextInputMode(CEGUI::Spinner::FloatingPoint);
 			sp_angle->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onAngleSpinnerChanged, this));
+			
+			sp_depth = static_cast<CEGUI::Spinner*>(m_gui.createWidget("TaharezLook/Spinner", glm::vec4(0.0f, 0.0f, xPixelPos + deltaXPixel, yPixelPos+deltaYPixel), sizeRec, "Group/DepthSpinner", temp));
+			sp_depth->setMinimumValue(0);
+			sp_depth->setMaximumValue(1000);
+			sp_depth->setStepSize(1);
+			sp_depth->setTextInputMode(CEGUI::Spinner::Integer);
+			sp_depth->subscribeEvent(CEGUI::Spinner::EventValueChanged, CEGUI::Event::Subscriber(&EditScreen::onDepthSpinnerChanged, this));
 		}
 		//texture comboBox
 		{
 			glm::vec4 comboBoxSizeRec(0.0f, 0.0f, 140.0f, 150.0f);
 			float xPixelPos3 = 90.0f;
-			float yPixelPos3 = yPixelOPoint - 240.0f;
+			float yPixelPos3 = yPixelOPoint - 290.0f;
 			cb_texture = static_cast<CEGUI::Combobox*>(m_gui.createWidget("TaharezLook/Combobox", glm::vec4(0.0f, 0.0f, xPixelPos3, yPixelPos3), comboBoxSizeRec, "Group/TextureComboBox", temp));
 			cb_texture->subscribeEvent(CEGUI::Combobox::EventTextAccepted, CEGUI::Event::Subscriber(&EditScreen::onTextureInput, this));
 			addListToComboBox("Textures/Tiles", cb_texture);
@@ -294,6 +305,7 @@ void EditScreen::initUI() {
 		sp_width->setCurrentValue(1.0f);
 		sp_height->setCurrentValue(1.0f);
 		sp_angle->setCurrentValue(0.0f);
+		sp_depth->setCurrentValue(1);
 		sp_size->setCurrentValue(10.0f);
 		//frame window invisable
 		w_file->setVisible(false);
@@ -331,6 +343,7 @@ void EditScreen::update()
 {
 	m_UIcamera.change();
 	m_camera.change();
+	m_backGround.update();
 
 	if (m_needUpdate && m_selectMode == SelectionMode::SELECT && m_currentObjectIndex != -1) {
 		//update any select temp object
@@ -342,6 +355,7 @@ void EditScreen::update()
 			b.dimension = m_dimension;
 			b.tempAngle = m_angle;
 			b.physicMode = m_physicMode;
+			b.depth = m_depth;
 		}else if (m_objectMode == ObjectMode::LIGHT) {
 			Light& L = m_lights[m_currentObjectIndex];
 			//moveObject(L.centerPos);
@@ -364,18 +378,19 @@ void EditScreen::draw()
 	drawUI();
 }
 void EditScreen::drawScreen(){
-	glm::mat4 camMatrix = m_camera.getcameramatrix();
+
+	m_backGround.draw(&m_program, &m_spriteBatch);
 
 	m_program.use();
-	//texture upload
-	glActiveTexture(GL_TEXTURE0);
+
 	GLint samplerLoc = m_program.getuniformposition("mysampler");
+	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(samplerLoc, 0);
-	//camera upload
 	GLint camID = m_program.getuniformposition("P");
+	glm::mat4 camMatrix = m_camera.getcameramatrix();
 	glUniformMatrix4fv(camID, 1, GL_FALSE, &camMatrix[0][0]);
-	//clear
-	m_spriteBatch.begin();
+
+	m_spriteBatch.begin(Lengine::GlyphSortType::BACK_TO_FRONT);
 	//draw previews of BOX and PLAYER
 	if (m_selectMode == SelectionMode::PLACE && (!isMouseInGroup())) {
 
@@ -398,7 +413,7 @@ void EditScreen::drawScreen(){
 		}
 
 		if (m_objectMode == ObjectMode::PLATFORM) {
-			m_tempBox.tempSetAll(glm::vec4(alignedPos,m_dimension), m_angle, m_color, m_texture, m_physicMode);
+			m_tempBox.tempSetAll(glm::vec4(alignedPos,m_dimension), m_angle,m_depth, m_color, m_texture, m_physicMode);
 			m_tempBox.tempDraw(&m_spriteBatch);
 		}
 		else if (m_objectMode == ObjectMode::PLAYER) {
@@ -406,7 +421,6 @@ void EditScreen::drawScreen(){
 			m_tempPlayer.tempDraw(&m_spriteBatch);
 		}
 	}
-	//m_spriteBatch.draw(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),glm::vec4(0.0f,0.0f,1.0f,1.0f),m_texture.id,1.0f, Lengine::ColorRGBA8(255, 255, 255, 255));
 	//draw BOX and PLAYER existed
 	for (int i = 0;i < m_boxes.size();i++) {
 		m_boxes[i].tempDraw(&m_spriteBatch);
@@ -415,10 +429,11 @@ void EditScreen::drawScreen(){
 		//Only draw there is a player 
 		m_player.tempDraw(&m_spriteBatch);
 	}
-	
 	m_spriteBatch.end();
 	m_spriteBatch.renderBatch();
+
 	m_program.unuse();
+
 
 	//draw all lights
 	m_lightPro.use();
@@ -519,9 +534,11 @@ void EditScreen::drawUI() {
 	addLable(static_cast<CEGUI::Window*>(sp_width), "Width");
 	addLable(static_cast<CEGUI::Window*>(sp_height), "Height");
 	addLable(static_cast<CEGUI::Window*>(sp_angle), "Angle");
+	addLable(static_cast<CEGUI::Window*>(sp_depth), "Depth");
 	addLable(static_cast<CEGUI::Window*>(b_rigid), "Rigid");
 	addLable(static_cast<CEGUI::Window*>(b_dynamic), "Dynamic");
 	addLable(static_cast<CEGUI::Window*>(b_movable), "Movable");
+	addLable(static_cast<CEGUI::Window*>(b_void), "Void");
 	addLable(static_cast<CEGUI::Window*>(sp_size), "Size");
 
 	m_spriteBatch.end();
@@ -549,7 +566,7 @@ glm::vec2 EditScreen::getMouseWorldCords() {
 void EditScreen::addLable(CEGUI::Window*widget, const char* text) {
 	if (widget->isVisible()) {
 		float distance = 7.0f;		//lable has 5pix distance from the wiget
-		float scale = 0.6f;
+		float scale = 0.56f;
 		glm::vec2 pos(widget->getPixelPosition().d_x, widget->getPixelPosition().d_y);
 		pos = m_UIcamera.wintoworld(pos);
 		pos += glm::vec2(widget->getPixelSize().d_width / 2.0f, distance);
@@ -577,19 +594,21 @@ void EditScreen::setSelectObject(ObjectMode objectMode, int index) {
 		b_player->setVisible(true);
 		b_player->setSelected(true);
 		break;
-	case ObjectMode::PLATFORM:
+	case ObjectMode::PLATFORM: {
+		Box& B = m_boxes[index];
 		b_platform->setVisible(true);
 		b_platform->setSelected(true);
-		sp_width->setCurrentValue(m_boxes[index].dimension.x);
-		sp_height->setCurrentValue(m_boxes[index].dimension.y);
-		sp_angle->setCurrentValue(m_boxes[index].tempAngle);
-		s_red->setCurrentValue(m_boxes[index].color.r);
-		s_green->setCurrentValue(m_boxes[index].color.g);
-		s_blue->setCurrentValue(m_boxes[index].color.b);
-		s_alpha->setCurrentValue(m_boxes[index].color.a);
-		cb_texture->setText(CEGUI::String(m_boxes[index].texture->filePath));
-		m_texture = m_boxes[index].texture;
-		switch (m_boxes[index].physicMode) {
+		sp_width->setCurrentValue(B.dimension.x);
+		sp_height->setCurrentValue(B.dimension.y);
+		sp_angle->setCurrentValue(B.tempAngle);
+		sp_depth->setCurrentValue(B.depth);
+		s_red->setCurrentValue(B.color.r);
+		s_green->setCurrentValue(B.color.g);
+		s_blue->setCurrentValue(B.color.b);
+		s_alpha->setCurrentValue(B.color.a);
+		cb_texture->setText(CEGUI::String(B.texture->filePath));
+		m_texture = B.texture;
+		switch (B.physicMode) {
 		case PhysicMode::RIGID:
 			b_rigid->setSelected(true);
 			break;
@@ -603,6 +622,7 @@ void EditScreen::setSelectObject(ObjectMode objectMode, int index) {
 			b_void->setSelected(true);
 		}
 		break;
+	}
 	case ObjectMode::LIGHT:
 		b_light->setVisible(true);
 		b_light->setSelected(true);
@@ -669,6 +689,7 @@ void EditScreen::setPlatformWidgetVisible(bool visibility) {
 	sp_width->setVisible(visibility);
 	sp_height->setVisible(visibility);
 	sp_angle->setVisible(visibility);
+	sp_depth->setVisible(visibility);
 
 	cb_texture->setVisible(visibility);
 }
@@ -751,23 +772,34 @@ bool EditScreen::onMouseDown(const CEGUI::EventArgs& ea) {
 	const CEGUI::MouseEventArgs& ma = static_cast<const CEGUI::MouseEventArgs&>(ea);
 	if (m_selectMode == SelectionMode::SELECT&&ma.button == CEGUI::LeftButton) {
 		m_mouseCords = getMouseWorldCords();
-		glm::vec2 tempVec;
-		//check if mouse is in Boxes
+
+		int preseveSpace = (m_boxes.size() > 100 ? m_boxes.size() : 100);
+		int* boxIndex = new int[preseveSpace];
+		int indexNum = 0;
 		for (int i = 0;i < m_boxes.size();i++) {
 			Box& B = m_boxes[i];
 			if (B.isInBox(m_mouseCords))
-			{
-				setSelectObject(ObjectMode::PLATFORM, i);
-				m_movingObject = true;
-				m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&EditScreen::onObjectMove, this));
-				return true;
-			}
+				boxIndex[indexNum++] = i;
 		}
+
+		if (indexNum) {
+			int topBoxindex = boxIndex[0];
+			for (int i = 0;i < indexNum;i++) {
+				if (m_boxes[topBoxindex].depth < m_boxes[boxIndex[i]].depth)
+					topBoxindex = boxIndex[i];
+			}
+			setSelectObject(ObjectMode::PLATFORM, topBoxindex);
+			m_movingObject = true;
+			m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&EditScreen::onObjectMove, this));
+			return true;
+		}
+		
+		delete[] boxIndex;
+
 		//check if mouse is in lights
 		for (int i = 0;i < m_lights.size();i++) {
 			Light& L = m_lights[i];
-			tempVec = m_mouseCords - L.centerPos;
-			if (glm::length(tempVec) < 1.0f)
+			if (L.isInLight(m_mouseCords))
 			{
 				setSelectObject(ObjectMode::LIGHT, i);
 				m_movingObject = true;
@@ -942,12 +974,18 @@ bool EditScreen::onAngleSpinnerChanged(const CEGUI::EventArgs& ea) {
 	m_needUpdate = true;
 	return true;
 }
+bool EditScreen::onDepthSpinnerChanged(const CEGUI::EventArgs& ea) {
+	m_depth = sp_depth->getCurrentValue();
+	m_needUpdate = true;
+	return true;
+}
 bool EditScreen::onTextureInput(const CEGUI::EventArgs& ea) {
 	std::string texturePath(cb_texture->getText().c_str());
 	m_texture = Lengine::textureCache.gettexture("Textures/Tiles/" + texturePath);
 	m_needUpdate = true;
 	return true;
 }
+
 bool EditScreen::onSizeSpinnerChanged(const CEGUI::EventArgs& ea) {
 	m_size = sp_size->getCurrentValue();
 	m_needUpdate = true;

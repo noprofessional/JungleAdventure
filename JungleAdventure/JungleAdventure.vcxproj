@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="BackGround.cpp" />
     <ClCompile Include="Box.cpp" />
     <ClCompile Include="Capsule.cpp" />
     <ClCompile Include="ContactListener.cpp" />
@@ -33,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="BackGround.h" />
     <ClInclude Include="Box.h" />
     <ClInclude Include="Capsule.h" />
     <ClInclude Include="ContactListener.h" />

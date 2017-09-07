@@ -153,7 +153,7 @@ namespace Lengine {
 		glEnableVertexAttribArray(UVC);
 
 		//this is vertex position attribute pointer(index,num,type,stride,startptr)
-		glVertexAttribPointer(POS, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+		glVertexAttribPointer(POS, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
 		//this is vertex color attribute pointer
 		glVertexAttribPointer(COL, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, color));

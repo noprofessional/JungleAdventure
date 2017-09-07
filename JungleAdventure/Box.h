@@ -20,6 +20,7 @@ public:
 	void tempSetAll(
 		const glm::vec4& desRec,
 		const float& tempAngle,
+		const float& depth,
 		const Lengine::ColorRGBA8& color,
 		Lengine::GLtexture* texture, 
 		const PhysicMode& physicMode);
@@ -51,6 +52,7 @@ public:
 	Lengine::ColorRGBA8 color;
 	Lengine::GLtexture* texture=nullptr;
 	float tempAngle;
+	float depth;
 	PhysicMode physicMode;
 private:
 	glm::vec4 getRenderDesRec();
