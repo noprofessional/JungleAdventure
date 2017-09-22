@@ -10,11 +10,15 @@ class Player {
 public:
 	Player();
 	~Player();
+
 	void tempSetAll(const glm::vec4 &RenderDesRec, const glm::vec2& CollisionDim, const glm::vec2& PosOffset, Lengine::GLtexture* texture);
 	void addToWorld(b2World* world);
+	
 	void update(Lengine::InputManager* inputmanager, float deltaTime = 1.0f);
+	
 	void startContact(b2Contact* contact);
 	void endContact(b2Contact* contact);
+
 	void draw(Lengine::SpriteBatch* spritebatch);
 	void debugDraw(Lengine::DebugRender* debugrender);
 
@@ -23,9 +27,11 @@ public:
 
 	bool isInPlayer(const glm::vec2& pos);
 
-	//////////////////////////////////////////////////////////////////////////
+	void writeAsBinary(std::ofstream& fout)const ;
+	void readFromBinary(std::ifstream& fin);
+
+
 	//getters
-	//////////////////////////////////////////////////////////////////////////
 	const glm::vec2&			getTempPos()const		{ return m_tempPos; }
 	glm::vec2&					getTempPosReference()	{ return m_tempPos; }
 	const glm::vec2&			getRenderDim()const		{ return m_renderDim; }
@@ -34,7 +40,8 @@ public:
 	const Lengine::ColorRGBA8&	getColor()const			{ return m_color; }
 	Lengine::GLtexture*			getTexture()const		{ return m_texture; }
 	Capsule&					getCapsule()			{ return m_capsule; }
-	const Capsule&				getConstCapsule()const	{ return m_capsule; }
+
+
 private:
 	//only use in player
 	enum PlayerState {
@@ -64,11 +71,14 @@ private:
 	Lengine::GLtexture* m_textures[PlayerState::TOTAL];
 	PlayerState m_playerState = PlayerState::IDLE;
 
-	bool m_isOnGround = true;
-	bool m_isJumping = false;
 	int m_contactNUM = 0;
+	bool m_isOnGround = true;
 	bool m_isPending = false;
-	bool m_startJump = false;
+
+	const float MAX_WALK_SPEED = 5.0f;
+	const float MAX_RUN_SPEED = 10.0f;
+	const float MIN_SPEED = 0.1f;
+	float limitSpeed = MAX_WALK_SPEED;
 
 	Capsule m_capsule;
 };

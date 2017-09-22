@@ -14,7 +14,7 @@ BackGround::BackGround(Lengine::ColorRGBA8 color, int cloudCount) {
 	Lengine::FileIO::getDirectoryEntries("Textures/Background/Cloud", cloudFiles);
 	for (auto&C : cloudFiles) {
 		if (!C.isDirectory) {
-			m_cloudTextures.push_back(Lengine::textureCache.gettexture(C.path));
+			m_cloudTextures.push_back(Lengine::textureCache.getSTClampedTexture(C.path));
 		}
 	}
 
@@ -56,7 +56,6 @@ void BackGround::setAsCurrent(Lengine::Window* window) {
 		C.DestRect.z *= C.texure->width;
 		C.DestRect.w *= C.texure->height;
 	}
-	printf("pos %f, %f, %f ,%f\n", m_clouds[0].DestRect.x, m_clouds[0].DestRect.y, m_clouds[0].DestRect.z, m_clouds[0].DestRect.w);
 
 }
 void BackGround::update() {

@@ -10,6 +10,8 @@ namespace Lengine {
 	int decodePNG(std::vector<unsigned char>& out_image, unsigned long& image_width, unsigned long& image_height,
 		const unsigned char* in_png, size_t in_size, bool convert_to_rgba32 = true);
 	GLtexture loadImageFile(std::string filepath);
+	GLuint uploadImageData(const int& width, const int& height, const uchvect& imageData);
+	void generateMiniMap(GLtexture& texture, bool isClamped);
 
 TextureCache::TextureCache()
 {
@@ -17,6 +19,19 @@ TextureCache::TextureCache()
 
 TextureCache::~TextureCache()
 {
+}
+
+GLtexture* TextureCache::addTexture(const std::string& fakeTexturePath, const int& width, const int& height, const std::vector<unsigned char>& data) {
+	GLtexture newTexture;
+	newTexture.clamped = false;
+	newTexture.filePath = fakeTexturePath;
+	newTexture.width = width;
+	newTexture.height = height;
+	newTexture.ids.clear();
+	newTexture.ids.push_back(uploadImageData(width, height, data));
+	generateMiniMap(newTexture, true);
+	m_texturemap.insert(make_pair(fakeTexturePath, newTexture));
+	return &m_texturemap[fakeTexturePath];
 }
 
 GLtexture* TextureCache::gettexture(const std::string& texturepath) {
@@ -27,6 +42,7 @@ GLtexture* TextureCache::gettexture(const std::string& texturepath) {
 
 		//creat the new Texture
 		GLtexture newTexture = loadImageFile(texturepath);
+		generateMiniMap(newTexture, false);
 		m_texturemap.insert(make_pair(texturepath, newTexture));
 
 		return &m_texturemap[texturepath];
@@ -35,6 +51,20 @@ GLtexture* TextureCache::gettexture(const std::string& texturepath) {
 	//find it return directly
 	return &(mit->second);
 }
+
+GLtexture* TextureCache::getSTClampedTexture(const std::string& texturePath) {
+	GLtexture* texture = gettexture(texturePath);
+	if (texture->clamped)
+	{
+		return texture;
+	}
+	else 
+	{
+		generateMiniMap(*texture, true);
+		return texture;
+	}
+}
+
 
 /*
 decodePNG: The picoPNG function, decodes a PNG file buffer in memory, into a raw pixel buffer.
@@ -582,6 +612,7 @@ GLtexture loadImageFile(std::string filepath) {
 	//check which file is it
 	string::size_type pos = filepath.rfind('.');
 	string ext = filepath.substr(pos == string::npos ? filepath.length() : pos + 1);
+
 	if (ext == "png") {
 		int errorcode = decodePNG(temp, width, height, &in[0], in.size());
 		if (errorcode != 0)
@@ -595,18 +626,7 @@ GLtexture loadImageFile(std::string filepath) {
 	//generate mipmap
 	texture.ids.resize(out.size());
 	for (int i = 0;i < out.size();i++) {
-		
-		glGenTextures(1, &texture.ids[i]);
-		glBindTexture(GL_TEXTURE_2D, texture.ids[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &((out[i])[0]));
-		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		texture.ids[i] = uploadImageData(width, height, out[i]);
 	}
 
 	//set orther data
@@ -616,4 +636,40 @@ GLtexture loadImageFile(std::string filepath) {
 
 	return texture;
 }
+
+GLuint uploadImageData(const int& width,const int& height,const uchvect& imageData) {
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)imageData.data());
+	glBindTexture(GL_TEXTURE_2D, 0);
+	return textureID;
 }
+void generateMiniMap(GLtexture& texture, bool isClamped) {
+
+	texture.clamped = isClamped;
+
+	for (int i = 0;i < texture.ids.size();i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, texture.ids[i]); 
+
+		if (isClamped) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		}
+		else {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		}
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+}
+
+}//namespace Lengine

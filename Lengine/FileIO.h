@@ -17,5 +17,6 @@ namespace Lengine {
 		static bool getDirectoryEntries(const char* filePath, std::vector<DivEntry>& entriesContainer);
 		//create a directory which has a relative path of filePath
 		static bool createDirectory(const char* filePath);
+		static bool isDirectory(const char* filePath);
 	};
 }

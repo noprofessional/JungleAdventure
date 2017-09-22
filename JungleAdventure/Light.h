@@ -11,6 +11,9 @@ public:
 	void debugDraw(Lengine::DebugRender* debugRenderer,bool selected= false);
 	bool isInLight(const glm::vec2&currentPos);
 
+	void writeAsBinary(std::ofstream& fout)const;
+	void readFromBinary(std::ifstream& fin);
+
 	glm::vec2 centerPos;
 	float size;
 	Lengine::ColorRGBA8 color;

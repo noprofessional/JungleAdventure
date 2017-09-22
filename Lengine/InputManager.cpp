@@ -17,6 +17,7 @@ void InputManager::presskey(unsigned int keyID) {
 }
 void InputManager::releasekey(unsigned int keyID) {
 	_keyMap[keyID] = false;
+	m_timeKeyMap[keyID] = frameCount;
 }
 bool InputManager::isKEYdown(unsigned int keyID) {
 	auto it = _keyMap.find(keyID);
@@ -30,13 +31,30 @@ bool InputManager::isKEYdown(unsigned int keyID) {
 bool InputManager::isKEYpressed(unsigned int keyID) {
 	if (isKEYdown(keyID) && wasKEYdown(keyID) != true)
 		return true;
-	else return false;
+	else 
+		return false;
+}
+
+bool InputManager::isKEYdoubleClicked(unsigned int keyID) {
+	if (isKEYpressed(keyID)&& frameCount-m_timeKeyMap[keyID]< 10)
+		return true;
+	else
+		return false;
 }
 
 void InputManager::update() {
 	//copy keymap to previous key map
 	for (auto it : _keyMap) {
 		_previouskeyMap[it.first] = it.second;
+	}
+
+	frameCount++;
+	if (frameCount > 100000)
+	{
+		frameCount = 100;
+		for (auto& it : m_timeKeyMap) {
+			it.second = 50;
+		}
 	}
 }
 

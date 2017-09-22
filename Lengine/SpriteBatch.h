@@ -27,10 +27,10 @@ public:
 	GLuint texture;
 	float depth;
 
-	Vertex& bottomleft = vertices[0][0];
-	Vertex& bottomright = vertices[1][0];
-	Vertex& topleft = vertices[0][1];
-	Vertex& topright = vertices[1][1];
+	Vertex& bottomleft() { return vertices[0][0]; }
+	Vertex& bottomright(){ return vertices[1][0]; }
+	Vertex& topleft(){ return vertices[0][1]; }
+	Vertex& topright(){ return vertices[1][1]; }
 private:
 	//first index is X, second is Y
 	//such as 0, 0 => left, bottom
@@ -51,29 +51,22 @@ public:
 	SpriteBatch();
 	~SpriteBatch();
 	
-	//creat Vao and preset attribute
 	void init();
-	
-	//clean all sprite batches and Glyphs, cleaner
+
 	void begin(GlyphSortType glphtype = GlyphSortType::TEXTURE);
-	
-	//sort the Glyphs and creat vertices and renderbatches, sorter and processer
+
 	void end();
 
-	//add a basic no texture glypth into thd Glyphs
 	void draw(const glm::vec4& recpos, const float & depth, const ColorRGBA8& color);
 	
-	//draw rotate boxes with direction vector
 	void draw(const glm::vec4 &recpos, const glm::vec4& recuv,
 		const GLuint& texture, const float & depth,
 		const ColorRGBA8 &color=Lengine::ColorRGBA8(255,255,255,255),
 		const glm::vec2 direction=glm::vec2(0.0f,0.0f));
 	
-	//draw rotate boxes with angle in degrees
 	void draw(const glm::vec4 &recpos, const glm::vec4& recuv, const GLuint& texture
 		, const float & depth, const ColorRGBA8 &color,const float& angle);
 
-	//use the vertices and renderbatches to render, user 
 	void renderBatch();
 private:
 

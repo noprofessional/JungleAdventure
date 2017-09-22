@@ -9,11 +9,12 @@
 #include"Box.h"
 #include"Light.h"
 #include"Player.h"
+#include "Tile.h"
 #include "BackGround.h"
+#include "TextureUVselector.h"
 enum class ObjectMode {
 	PLAYER,
 	PLATFORM,
-	TILE,
 	LIGHT
 };
 enum class SelectionMode {
@@ -41,12 +42,18 @@ public:
 	void drawScreen();
 	void drawDebug();
 private:
+	bool isMouseInUI();
 	bool isMouseInGroup();
 	glm::vec2 getMouseWorldCords();
 	void addLable(CEGUI::Window*widget,const char* text);
 	void addRightLable(CEGUI::Window*widget, const char* text);
 	void setSelectObject(ObjectMode objectMode, int index);
-	void moveObject(glm::vec2& pos);
+	void changeCamera();
+	bool inWhichTopBox(const glm::vec2& mouseCords, int& boxReturnIndex);
+	bool inSameDepthBox(const glm::vec2& mouseCords,int& boxReturnIndex);
+	glm::vec2 getBoxMaxPos();
+	void generateFrameData(int width, int height, std::vector<unsigned char>& out);
+
 
 	void addListToComboBox(const char* desDirectory, CEGUI::Combobox* comboBox);
 	void setPlatformWidgetVisible(bool visible);
@@ -129,6 +136,7 @@ private:
 
 	Lengine::Camera m_UIcamera;
 	Lengine::Camera m_camera;
+	Lengine::Camera m_frameCamera;
 	Lengine::ShaderPro m_program;
 	Lengine::ShaderPro m_lightPro;
 	Lengine::SpriteBatch m_spriteBatch;
@@ -147,13 +155,18 @@ private:
 	float m_size;
 	Lengine::ColorRGBA8 m_color;
 	Lengine::GLtexture* m_texture;
+	TextureUVselector m_uvSelector;
+	glm::vec4 m_uvRec;
 	Lengine::GLtexture* m_playerTexture;
 
 	int m_currentObjectIndex = -1;
+	std::vector<int> m_selectedBoxIndexes;
 	Player m_player;
 	std::vector<Box> m_boxes;
 	std::vector<Light> m_lights;
 
+	Tiles m_tiles;
+	Tile m_tempTile;
 	Player m_tempPlayer;
 	Box m_tempBox;
 	Light m_tempLight;

@@ -51,6 +51,12 @@
     <ClCompile Include="BackGround.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="TextureUVselector.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Tile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -87,6 +93,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BackGround.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureUVselector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Tile.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

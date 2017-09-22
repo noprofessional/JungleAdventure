@@ -13,6 +13,7 @@ GameScreen::~GameScreen()
 }
 
 void GameScreen::build() {
+	capture = true;
 	//window related init
 	m_background = BackGround(Lengine::ColorRGBA8(100, 100, 255, 255), 7);
 	m_background.setAsCurrent(m_game->getWindowPtr());
@@ -35,22 +36,12 @@ void GameScreen::build() {
 	m_lightBatch.init();
 
 	m_debugRender.init();
-	m_debuging = false;
+	m_debuging = true;
 
 	m_camera.init(WINDOW_WIDTH,WINDOW_HEIGHT);
 	m_camera.setposition(glm::vec2(0.0f,0.0f));
 	m_camera.setscale(32.0f);	//means 1 meter is 32 pixel on screen
-
-	m_gui.init("GUI");
-	m_gui.loadScheme("TaharezLook.scheme");
-	m_gui.loadScheme("AlfiskoSkin.scheme");
-	m_gui.setFont("DejaVuSans-10");
-	CEGUI::PushButton* BackButton = static_cast<CEGUI::PushButton*>(m_gui.createWidget("AlfiskoSkin/Button", glm::vec4(0.9f, 0.1f, 0.0f, 0.0f), glm::vec4(0.15f, 0.05f, 0.0f, 0.0f), "BackButton"));
-	BackButton->setText("Back to Menu");
-	BackButton->subscribeEvent(CEGUI::PushButton::EventClicked, CEGUI::Event::Subscriber(&GameScreen::actionBack,this));
-	m_gui.setMouseCursor("TaharezLook/MouseArrow");
-	m_gui.showMouseCursor();
-	SDL_ShowCursor(0);
+	m_camera.change();
 
 	//set the gravity of the world
 	b2Vec2 Gravity(0.0f, -10.0f);
@@ -59,30 +50,42 @@ void GameScreen::build() {
 	m_world->SetContactListener(&contactListener);
 
 	//load the level add to the world
-	LevelWriterNReader::readAsText("Levels/level1.txt", m_player, m_boxes, m_lights);
+	int width;
+	int height;
+	std::vector<unsigned char> frameData;
+	LevelWriterNReader::readAsBinary("Levels/level1.txt.level", m_player, m_boxes, m_lights, frameData, width, height);
+	frameTexture = Lengine::textureCache.addTexture("Levels/level1.txt.level", width, height, frameData);
+
 	m_player.addToWorld(m_world.get());
 	for (auto & B : m_boxes) {
 		B.addToWorld(m_world.get());
 	}
 
+	SDL_ShowCursor(1);
+
 }
+
 void GameScreen::destroy() {
-	m_gui.destroy();
 }
 
 void GameScreen::process() {
 	SDL_Event evnt;
 	while (SDL_PollEvent(&evnt)) {
-		m_gui.injectEvent(evnt);
 		basicInputProcess(evnt);
 	}
 }
+
 void GameScreen::update() {
-	m_world->Step(1.0f / 60.0f, 8, 3);
-	m_camera.change();
-	m_player.update(m_game->getInputManager());
 	m_background.update();
+
+	m_player.update(m_game->getInputManager());
+
+	cameraTrack();
+	m_camera.change();
+
+	m_world->Step(1.0f / 60.0f, 8, 3);
 }
+
 void GameScreen::draw() {
 
 	m_background.draw(&m_program, &m_spriteBatch);
@@ -103,14 +106,18 @@ void GameScreen::draw() {
 		m_spriteBatch.begin(Lengine::GlyphSortType::BACK_TO_FRONT);
 
 		m_player.draw(&m_spriteBatch);
-		for (auto& B : m_boxes) {
-			B.draw(&m_spriteBatch);
-		}
-		
+		/*for (auto& B : m_boxes) {
+			B.clampedDraw(&m_spriteBatch);
+		}*/
+		int SW = m_game->getWindowPtr()->getscreenwidth();
+		int SH = m_game->getWindowPtr()->getscreenheight();
+		float x = (-SW + frameTexture->width) / 2.0f / m_camera.getscale();
+		float y = (-SH + frameTexture->height) / 2.0f / m_camera.getscale();
+		m_spriteBatch.draw(glm::vec4(x,y, frameTexture->width/32.0f, frameTexture->height/32.0f), glm::vec4(0.0f, 1.0f, 1.0f, -1.0f), frameTexture->ids[0], 1.0f);
 		m_spriteBatch.end();
-
+		
 		m_spriteBatch.renderBatch();
-
+		
 		m_program.unuse();
 	}
 	//light render
@@ -146,12 +153,26 @@ void GameScreen::draw() {
 		m_debugRender.render(Projection, 0.5f);
 	}
 
-	m_gui.draw();
+	if (capture) {
+		buffer.resize(100 * 100 * 24);
+		glReadPixels(950, 650, 100, 100, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
 
+		capture = false;
+	}
 }
 
-bool GameScreen::actionBack(const CEGUI::EventArgs& args) {
-	m_state = Lengine::ScreenState::TO_PREVIOUS;
-	m_previousScreenIndex = MENU_SCREEN;
-	return true;
+void GameScreen::cameraTrack() {
+	const float RANGE = 1.0f;
+	static glm::vec2 prePlayerPos = m_player.getCapsule().getpos();
+	glm::vec2 playerPos = m_player.getCapsule().getpos();
+	glm::vec2 playerMove = m_player.getCapsule().getpos()-prePlayerPos;
+	prePlayerPos = playerPos;
+	if (playerPos.x>-3.0f)
+	{
+		m_camera.offsetPosition(glm::vec2(playerMove.x,0.0f));
+	}
+	if (playerPos.y>-3.0f) {
+		m_camera.offsetPosition(glm::vec2(0.0f, playerMove.y));
+	}
+
 }

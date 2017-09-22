@@ -1,5 +1,6 @@
 #include "Light.h"
-const float SELECT_RADIUS = 0.5f;
+#include <fstream>
+float SELECT_RADIUS = 0.5f;
 const Lengine::ColorRGBA8 MAGENTA(255, 255, 0, 255);
 const Lengine::ColorRGBA8 WHITE(255, 255, 255, 255);
 
@@ -31,4 +32,15 @@ bool Light::isInLight(const glm::vec2&currentPos) {
 		return true;
 	else
 		return false;
+}
+
+void Light::writeAsBinary(std::ofstream& fout) const{
+	fout.write((char*)&centerPos, sizeof(centerPos));
+	fout.write((char*)&size, sizeof(size));
+	fout.write((char*)&color, sizeof(color));
+}
+void Light::readFromBinary(std::ifstream& fin) {
+	fin.read((char*)&centerPos, sizeof(centerPos));
+	fin.read((char*)&size, sizeof(size));
+	fin.read((char*)&color, sizeof(color));
 }

@@ -1,6 +1,6 @@
 #include"Player.h"
-#include<algorithm>
-
+#include <algorithm>
+#include <fstream>
 Player::Player() {
 
 }
@@ -30,44 +30,52 @@ void Player::addToWorld(b2World* world) {
 	m_capsule.getbody()->SetUserData(this);
 
 	//get all texture pointer
-	m_textures[IDLE] =  Lengine::textureCache.gettexture("Textures/Player/IDLE.gif");
-	m_textures[JUMP_UP] =  Lengine::textureCache.gettexture("Textures/Player/JUMP_1_UP.gif");
-	m_textures[JUMP_MIDAIR] =  Lengine::textureCache.gettexture("Textures/Player/JUMP_2_MIDAIR.gif");
-	m_textures[JUMP_DOWN] =  Lengine::textureCache.gettexture("Textures/Player/JUMP_3_DOWN.gif");
-	m_textures[JUMP_LAND] =  Lengine::textureCache.gettexture("Textures/Player/JUMP_4_LAND.gif");
-	m_textures[WALK] =  Lengine::textureCache.gettexture("Textures/Player/WALK.gif");
-	m_textures[RUN] =  Lengine::textureCache.gettexture("Textures/Player/RUN.gif");
-	m_textures[DUCK] =  Lengine::textureCache.gettexture("Textures/Player/DUCK.gif");
-	m_textures[SLIDE] =  Lengine::textureCache.gettexture("Textures/Player/SLIDE.gif");
+	m_textures[IDLE] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/IDLE.gif");
+	m_textures[JUMP_UP] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/JUMP_1_UP.gif");
+	m_textures[JUMP_MIDAIR] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/JUMP_2_MIDAIR.gif");
+	m_textures[JUMP_DOWN] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/JUMP_3_DOWN.gif");
+	m_textures[JUMP_LAND] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/JUMP_4_LAND.gif");
+	m_textures[WALK] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/WALK.gif");
+	m_textures[RUN] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/RUN.gif");
+	m_textures[DUCK] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/DUCK.gif");
+	m_textures[SLIDE] =  Lengine::textureCache.getSTClampedTexture("Textures/Player/SLIDE.gif");
 
 }
 
 void Player::update(Lengine::InputManager* inputmanager, float deltaTime/*=1.0f*/) {
-	const float MAX_SPEED = 5.0f;
-	const float MIN_SPEED = 0.1f;
 
 	b2Body* temp = m_capsule.getbody();
 
+	//double click for run
+	if (limitSpeed != MAX_RUN_SPEED)
+	{
+		if (inputmanager->isKEYdoubleClicked(SDLK_d) || inputmanager->isKEYdoubleClicked(SDLK_a)) {
+			limitSpeed = MAX_RUN_SPEED;
+		}
+	}
+
 	//movement on X-axis
 	if (inputmanager->isKEYdown(SDLK_a)) {
-		temp->ApplyForceToCenter(b2Vec2(-6.0f, 0.0f), true);
+		temp->ApplyForceToCenter(b2Vec2(-7.0f, 0.0f), true);
+
 	}
 	else if (inputmanager->isKEYdown(SDLK_d)) {
-		temp->ApplyForceToCenter(b2Vec2(6.0f, 0.0f), true);
+		temp->ApplyForceToCenter(b2Vec2(7.0f, 0.0f), true);
 	}
 	else if (abs(temp->GetLinearVelocity().x) >= MIN_SPEED) {
-		temp->SetLinearVelocity(b2Vec2(0.95*temp->GetLinearVelocity().x, temp->GetLinearVelocity().y));
+		temp->SetLinearVelocity(b2Vec2(0.9f*temp->GetLinearVelocity().x, temp->GetLinearVelocity().y));
 	}
 	else if (abs(temp->GetLinearVelocity().x) < MIN_SPEED) {
 		temp->SetLinearVelocity(b2Vec2(0.0f, temp->GetLinearVelocity().y));
+		limitSpeed = MAX_WALK_SPEED;
 	}
 
 	//limit the X-axised move speed
-	if (temp->GetLinearVelocity().x > MAX_SPEED) {
-		temp->SetLinearVelocity(b2Vec2(MAX_SPEED, temp->GetLinearVelocity().y));
+	if (temp->GetLinearVelocity().x > limitSpeed) {
+		temp->SetLinearVelocity(b2Vec2(limitSpeed, temp->GetLinearVelocity().y));
 	}
-	else if (temp->GetLinearVelocity().x < -MAX_SPEED) {
-		temp->SetLinearVelocity(b2Vec2(-MAX_SPEED, temp->GetLinearVelocity().y));
+	else if (temp->GetLinearVelocity().x < -limitSpeed) {
+		temp->SetLinearVelocity(b2Vec2(-limitSpeed, temp->GetLinearVelocity().y));
 	}
 	
 	//movement on Y-axis
@@ -78,13 +86,11 @@ void Player::update(Lengine::InputManager* inputmanager, float deltaTime/*=1.0f*
 		}
 	}
 	
-	//update player state
-	b2Vec2 velocity = temp->GetLinearVelocity();
-
 	//state decide
+	b2Vec2 velocity = temp->GetLinearVelocity();
 	if (!m_isPending) {
 		if (m_playerState == DUCK) {
-			temp->ApplyLinearImpulse(b2Vec2(0.0f, 15.0f), b2Vec2(temp->GetPosition()), true);
+			temp->ApplyLinearImpulse(b2Vec2(0.0f, 13.0f), b2Vec2(temp->GetPosition()), true);
 			m_playerState = JUMP_UP;
 		}
 		else if (m_playerState == JUMP_MIDAIR) {
@@ -117,11 +123,13 @@ void Player::update(Lengine::InputManager* inputmanager, float deltaTime/*=1.0f*
 				m_playerState = IDLE;
 
 				//WALK
-				if (velocity.x > MIN_SPEED) {
+				if (abs(velocity.x) > MIN_SPEED) {
 					m_playerState = WALK;
 				}
-				else if (velocity.x < -MIN_SPEED) {
-					m_playerState = WALK;
+				
+				//RUN
+				if (abs(velocity.x) > MAX_WALK_SPEED) {
+					m_playerState = RUN;
 				}
 
 			}
@@ -156,7 +164,7 @@ void Player::update(Lengine::InputManager* inputmanager, float deltaTime/*=1.0f*
 	}
 
 	//loop if is not a pending activity
-	//else stop pending
+	//else use last image
 	if (m_imageCounter > m_texture->ids.size() - 1){
 		if (m_isPending) {
 			m_isPending = false;
@@ -172,7 +180,7 @@ void Player::update(Lengine::InputManager* inputmanager, float deltaTime/*=1.0f*
 		m_UVdesRec = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 	}
 	else if (velocity.x < -MIN_SPEED) {
-		m_UVdesRec = glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
+		m_UVdesRec = glm::vec4(1.0f, 0.0f, -1.0f, 1.0f);
 	}
 
 }
@@ -198,7 +206,7 @@ void Player::endContact(b2Contact* contact) {
 }
 
 void Player::draw(Lengine::SpriteBatch* spritebatch) {
-	spritebatch->draw(getRenderDesRect(), m_UVdesRec, m_texture->ids[m_imageCounter], 1.0f, m_color);
+	spritebatch->draw(getRenderDesRect(), m_UVdesRec, m_texture->ids[m_imageCounter], 20.0f, m_color);
 }
 
 void Player::debugDraw(Lengine::DebugRender* debugrender) {
@@ -225,6 +233,38 @@ bool Player::isInPlayer(const glm::vec2& pos) {
 		return true;
 	else
 		return false;
+}
+
+void Player::writeAsBinary(std::ofstream& fout)const {
+	glm::vec4 renderDesRect(m_tempPos, m_renderDim);
+	fout.write((char*)&renderDesRect, sizeof(glm::vec4));
+	fout.write((char*)&m_collisoinDim, sizeof(glm::vec2));
+	fout.write((char*)&m_posOffset, sizeof(glm::vec2));
+
+	const char* str = m_texture->filePath.c_str();
+	int len = (strlen(str)+1) * sizeof(char);
+	fout.write((char*)&len, sizeof(int));
+	fout.write(str, len);
+}
+
+void Player::readFromBinary(std::ifstream& fin) {
+
+	glm::vec4 renderDesRec;
+	glm::vec2 collisionDim;
+	glm::vec2 posOffset;
+	fin.read((char*)&renderDesRec, sizeof(glm::vec4));
+	fin.read((char*)&collisionDim, sizeof(glm::vec2));
+	fin.read((char*)&posOffset, sizeof(glm::vec2));
+
+	int len = 0;
+	fin.read((char*)&len, sizeof(int));
+	char temp[500];
+	fin.read(temp, len);
+	temp[len] = '\0';
+	std::string texturePath(temp);
+
+	Lengine::GLtexture* texture = Lengine::textureCache.gettexture(texturePath);
+	tempSetAll(renderDesRec, collisionDim, posOffset, texture);
 }
 
 glm::vec4 Player::getRenderDesRect() {

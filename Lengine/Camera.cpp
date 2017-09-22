@@ -16,7 +16,7 @@ void Camera::init(int screenWidth, int screenHeight) {
 
 	//ortho matrix init with left, right, bottom, up
 	_orthoMatrix = glm::ortho(0.0f, float(_screenWidth), 0.0f, float(_screenHeight));
-	glm::vec3 translate(-_position.x + _screenWidth / 2, -_position.y + _screenHeight / 2, 0.0f);
+	glm::vec3 translate( _screenWidth / 2, _screenHeight / 2, 0.0f);
 	_cameraMatrix = glm::translate(_orthoMatrix, translate);
 }
 

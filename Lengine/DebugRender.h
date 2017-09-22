@@ -16,6 +16,7 @@ namespace Lengine {
 		void drawCircle(const glm::vec2 &center, float radius, const ColorRGBA8 &color);
 		void drawLine(const glm::vec2& a, const glm::vec2& b, const ColorRGBA8 &color);
 		void drawCapsule(const glm::vec4& desRec, const ColorRGBA8& color, float angle=0.0f);
+		void drawGrid(const glm::vec4& desRec, const glm::vec2& tileDim, const ColorRGBA8& color = ColorRGBA8(255, 255, 255, 255));
 
 		void end();
 		void render(glm::mat4 projectionmatrix,float linewidth);

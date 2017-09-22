@@ -1,7 +1,8 @@
 #include "Box.h"
-#include<iostream>
-#include<random>
-#include<ctime>
+#include <iostream>
+#include <random>
+#include <ctime>
+#include <fstream>
 
 Box::Box() {
 }
@@ -9,14 +10,18 @@ Box::~Box() {
 	//don't need to destroy body which will be destroied after the world is expired
 }
 
-void Box::tempSetAll(const glm::vec4& desRec,
-	const float& angle,
-	const float& Depth,
-	const Lengine::ColorRGBA8& Color,
-	Lengine::GLtexture* Texture, 
-	const PhysicMode& PhysicMode) {
+void Box::tempSetAll(
+		const glm::vec4& desRec,
+		const glm::vec4& UVRect,
+		const float& angle,
+		const float& Depth,
+		const Lengine::ColorRGBA8& Color,
+		Lengine::GLtexture* Texture, 
+		const PhysicMode& PhysicMode) 
+{
 	tempPos = glm::vec2(desRec.x, desRec.y);
 	dimension = glm::vec2(desRec.z, desRec.w);
+	uvRect = UVRect;
 	tempAngle = angle;
 	depth = Depth;
 	color = Color;
@@ -53,10 +58,6 @@ void Box::addToWorld(b2World* world) {
 	}
 }
 
-void Box::tempDraw(Lengine::SpriteBatch * spritebatch) {
-	spritebatch->draw(getRenderDesRec(), glm::vec4(0.0f, 0.0f, dimension.x, dimension.y), texture->ids[0], depth, color, tempAngle);
-}
-
 void Box::tempDebugDraw(Lengine::DebugRender* debugRenderer, bool selected /*= false*/) {
 	if (!selected) {
 		switch (physicMode)
@@ -80,8 +81,21 @@ void Box::tempDebugDraw(Lengine::DebugRender* debugRenderer, bool selected /*= f
 }
 
 void Box::draw(Lengine::SpriteBatch* spritebatch) {
+	texture = Lengine::textureCache.gettexture(texture->filePath);
 	const glm::vec4 uvrec(0.0f, 0.0f, dimension.x, dimension.y);
 	spritebatch->draw(getRenderDesRec(), uvrec, texture->ids[0], depth, color,getRenderAngle());
+}
+void Box::clampedDraw(Lengine::SpriteBatch* spritebatch) {
+	float x = dimension.x;
+	float y = dimension.y;
+	glm::vec4 leftBottomDesRec(getRenderDesRec().x - dimension.x / 2.0f + 0.5f, getRenderDesRec().y - dimension.y / 2.0f + 0.5f, 1.0f, 1.0f);
+	texture = Lengine::textureCache.getSTClampedTexture(texture->filePath);
+
+	for (float x = 0.0f;x < dimension.x;x++) {
+		for (float y = 0.0f;y < dimension.y;y++) {
+			spritebatch->draw(leftBottomDesRec + glm::vec4(x, y, 0.0f, 0.0f), uvRect, texture->ids[0], depth, color, getRenderAngle());
+		}
+	}
 }
 
 void Box::debugDraw(Lengine::DebugRender * debugRenderer) {
@@ -98,7 +112,39 @@ bool Box::isInBox(const glm::vec2 &pos) {
 		return false;
 }
 
-glm::vec4 Box::getRenderDesRec() {
+void Box::writeAsBinary(std::ofstream& fout) const {
+	fout.write((char*)&tempPos, sizeof(glm::vec2));
+	fout.write((char*)&dimension, sizeof(glm::vec2));
+	fout.write((char*)&uvRect, sizeof(glm::vec4));
+	fout.write((char*)&tempAngle, sizeof(float));
+	fout.write((char*)&depth, sizeof(float));
+	fout.write((char*)&color, sizeof(Lengine::ColorRGBA8));
+
+	const char * str = texture->filePath.c_str();
+	int len = strlen(str) + 1;
+	fout.write((char*)&len, sizeof(int));
+	fout.write(str, len);
+
+	fout.write((char*)&physicMode, sizeof(physicMode));
+
+}
+void Box::readFromBinary(std::ifstream& fin) {
+	fin.read((char*)&tempPos, sizeof(glm::vec2));
+	fin.read((char*)&dimension, sizeof(glm::vec2));
+	fin.read((char*)&uvRect, sizeof(glm::vec4));
+	fin.read((char*)&tempAngle, sizeof(float));
+	fin.read((char*)&depth, sizeof(float));
+	fin.read((char*)&color, sizeof(Lengine::ColorRGBA8));
+
+	int len = 0;
+	char str[500];
+	fin.read((char*)&len, sizeof(int));
+	fin.read(str, len);
+
+	fin.read((char*)&physicMode, sizeof(physicMode));
+}
+
+glm::vec4 Box::getRenderDesRec()  {
 	glm::vec2 Pos = tempPos;
 	//if it has been added to the world
 	if (m_body) {

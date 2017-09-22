@@ -1,8 +1,0 @@
-100
--141 36 64 64 32 56 0 -4 Textures/spr_m_traveler_idle_anim.gif
-4
--98 -14 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BRE_BG.png
--130 -14 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
--162 -14 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
--194 -14 1 1 0 0 ÿ ÿ ÿ ÿ Textures/Tiles/BG_BG.png
-0

@@ -7,20 +7,21 @@
 #include"Player.h"
 #include"Box.h"
 #include"Light.h"
-
+#include <Lengine/SpriteBatch.h>
 
 // When you want to make a new version, add it here
 const unsigned int TEXT_VERSION_0 = 100;
+const unsigned int BIN_VERSION_0 = 100;
 
 // Make sure this is set to the current version
 const unsigned int TEXT_VERSION = TEXT_VERSION_0;
-
+const unsigned int BIN_VERSION = BIN_VERSION_0;
 
 void LevelWriterNReader::saveAsText(const std::string& filePath, const Player& player, const std::vector<Box>& boxes, const std::vector<Light>& lights) {
 	saveTextV0(filePath, player, boxes, lights);
 }
-void LevelWriterNReader::saveAsBinary(const std::string& filePath, const Player& player, const std::vector<Box>& boxes, const std::vector<Light>& lights) {
-	Lengine::fatalError("save binary is not implement");
+void LevelWriterNReader::saveAsBinary(const std::string& filePath, const Player& player, const std::vector<Box>& boxes, const std::vector<Light>& lights, const std::vector<unsigned char>& frameRawData, const int& width, const int& height) {
+	saveAsBinaryV0(filePath, player, boxes, lights, frameRawData,width,height);
 }
 void LevelWriterNReader::readAsText(const std::string& filePath, Player& player, std::vector<Box>& boxes, std::vector<Light>& lights) {
 	std::ifstream fileIn(filePath);
@@ -41,8 +42,27 @@ void LevelWriterNReader::readAsText(const std::string& filePath, Player& player,
 		Lengine::fatalError("Unknow version in leverl file!\nFile may have been corrupted...");
 	}
 }
-void LevelWriterNReader::readAsBinary(const std::string& filePath, Player& player, std::vector<Box>& boxes, std::vector<Light>& lights) {
-	Lengine::fatalError("read binary is not implement");
+void LevelWriterNReader::readAsBinary(const std::string& filePath, Player& player, std::vector<Box>& boxes, std::vector<Light>& lights, std::vector<unsigned char>& frameRawData, int& width, int& height) {
+	
+	std::ifstream fileIn(filePath,std::ios_base::binary);
+	if (fileIn.fail()) {
+		perror(filePath.c_str());
+		Lengine::fatalError("File " + filePath + " can not be open!");
+	}
+
+	unsigned int version;
+	fileIn.read((char*)&version, sizeof(unsigned int));
+
+	switch (version) {
+	case BIN_VERSION_0:
+		readAsBinaryV0(fileIn, player, boxes, lights,frameRawData,width,height);
+		break;
+//	case otherVersion:
+//		readTextV...;
+//		break;
+	default:
+		Lengine::fatalError("Unknow version in leverl file!\nFile may have been corrupted...");
+	}
 }
 
 void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& player, const std::vector<Box>& boxes, const std::vector<Light>& lights) {
@@ -71,8 +91,9 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 	fileOut << boxes.size() << '\n';
 	for (auto& B : boxes) {
 		Col = &(B.color);
-		fileOut << B.tempPos.x << ' ' << B.tempPos.y << ' '
-			<< B.dimension.x << ' ' << B.dimension.y << ' '
+		fileOut
+			<< B.tempPos.x << ' ' << B.tempPos.y << ' ' << B.dimension.x << ' ' << B.dimension.y << ' '
+			<< B.uvRect.x << ' ' << B.uvRect.y << ' ' << B.uvRect.z << ' ' << B.uvRect.w << ' '
 			<< B.tempAngle << ' '
 			<< B.depth << ' '
 			<< B.physicMode << ' '
@@ -90,7 +111,38 @@ void LevelWriterNReader::saveTextV0(const std::string& filePath, const Player& p
 	}
 
 }
+void LevelWriterNReader::saveAsBinaryV0(const std::string& filePath, const Player& player, const std::vector<Box>& boxes, const std::vector<Light>& lights, const std::vector<unsigned char>& frameRawData,  const int& width, const int& height) {
 	
+	std::ofstream fout(filePath.c_str(), std::ios_base::binary);
+	if (fout.fail()) {
+		perror(filePath.c_str());
+		Lengine::fatalError("file " + filePath + " open failed!\n");
+	}
+
+	fout.write((char*)&BIN_VERSION, sizeof(unsigned int));
+
+	fout.write((char*)&width, sizeof(width));
+	fout.write((char*)&height, sizeof(height));
+	fout.write((char*)frameRawData.data(), frameRawData.size());
+
+	player.writeAsBinary(fout);
+
+	int size = boxes.size();
+	fout.write((char*)&size, sizeof(int));
+	for (auto& B : boxes) {
+		B.writeAsBinary(fout);
+	}
+
+	size = lights.size();
+	fout.write((char*)&size, sizeof(int));
+	for (auto& L : lights) {
+		L.writeAsBinary(fout);
+	}
+
+	fout.close();
+	
+}
+
 void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::vector<Box>& boxes, std::vector<Light>& lights) {
 	
 	std::string texturePath;
@@ -103,11 +155,12 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 		fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w 
 			>>collisionDim.x>>collisionDim.y>>posOffset.x>>posOffset.y
 			>> texturePath;
-		player.tempSetAll(desRec, collisionDim,posOffset, Lengine::textureCache.gettexture(texturePath));
+		player.tempSetAll(desRec, collisionDim,posOffset, Lengine::textureCache.getSTClampedTexture(texturePath));
 	}
 	//boxes load
 	{
 		glm::vec4 desRec;
+		glm::vec4 uvRect;
 		float angle;
 		float depth;
 		int physicModeCode;
@@ -120,6 +173,7 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 
 		for (int i = 0;i < size;i++) {
 			fileIn >> desRec.x >> desRec.y >> desRec.z >> desRec.w
+				>>uvRect.x>> uvRect.y >> uvRect.z >> uvRect.w
 				>> angle >> depth
 				>> physicModeCode
 				>> color.r >> color.g >> color.b >> color.a >> texturePath;
@@ -137,7 +191,7 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 				physicMode = PhysicMode::VOIDSPACE;
 				break;
 			}
-			boxes[i].tempSetAll(desRec, angle, depth, color, Lengine::textureCache.gettexture(texturePath), physicMode);
+			boxes[i].tempSetAll(desRec,uvRect, angle, depth, color, Lengine::textureCache.gettexture(texturePath), physicMode);
 		}
 	}
 	//lights load
@@ -152,3 +206,31 @@ void LevelWriterNReader::readTextV0(std::ifstream& fileIn, Player& player, std::
 	}
 	fileIn.close();
 }
+void LevelWriterNReader::readAsBinaryV0(std::ifstream& fin, Player& player, std::vector<Box>& boxes, std::vector<Light>& lights, std::vector<unsigned char>& frameRawData, int& width, int& height) {
+	fin.read((char*)&width, sizeof(int));
+	fin.read((char*)&height, sizeof(int));
+
+	frameRawData.clear();
+	frameRawData.resize(width * height * 4);
+	fin.read((char*)frameRawData.data(), frameRawData.size());
+
+	player.readFromBinary(fin);
+
+	int size = 0;
+	fin.read((char*)&size, sizeof(int));
+	boxes.clear();
+	boxes.resize(size);
+	for (auto& B : boxes) {
+		B.readFromBinary(fin);
+	}
+
+	fin.read((char*)&size, sizeof(int));
+	lights.clear();
+	lights.resize(size);
+	for (auto& L : lights) {
+		L.readFromBinary(fin);
+	}
+
+	fin.close();
+}
+

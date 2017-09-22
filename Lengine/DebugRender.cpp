@@ -167,6 +167,25 @@ namespace Lengine {
 		drawCircle(circlepos2, desRec.z / 2.0f, color);
 	}
 
+	void DebugRender::drawGrid(const glm::vec4& desRec, const glm::vec2& tileDim, const ColorRGBA8& color/* = ColorRGBA8(255, 255, 255, 255)*/) {
+		drawBox(desRec, color, 0.0f);
+		int vertical_num = ceil(desRec.z / tileDim.x);
+		int horizontal_num = ceil(desRec.w / tileDim.y);
+		float x_origin = desRec.x - desRec.z / 2.0f;
+		float x_max = desRec.x + desRec.z / 2.0f;
+		int y_origin = desRec.y - desRec.w / 2.0f;
+		float y_max = desRec.y + desRec.w / 2.0f;
+
+		for (int x = 0;x < vertical_num;x++) {
+			float xPos = x*tileDim.x + x_origin;
+			drawLine(glm::vec2(xPos,y_origin), glm::vec2(xPos, y_max), color);
+		}
+		for (int y = 0;y < horizontal_num;y++) {
+			float yPos = y*tileDim.y + y_origin;
+			drawLine(glm::vec2(x_origin, yPos), glm::vec2(x_max, yPos), color);
+		}
+	}
+
 
 	void DebugRender::end() {
 		glBindBuffer(GL_ARRAY_BUFFER,m_vbo);

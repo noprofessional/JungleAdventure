@@ -90,4 +90,8 @@ namespace Lengine {
 	bool FileIO::createDirectory(const char* filePath) {
 		return fs::create_directory(fs::path(filePath));
 	}
+	bool FileIO::isDirectory(const char* filePath) {
+		return fs::is_directory(filePath);
+	}
+
 }

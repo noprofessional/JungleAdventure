@@ -20,6 +20,7 @@ public:
 	//getters
 	glm::vec2 getposition() { return _position; }
 	float getscale() { return _scale; }
+	glm::ivec2 getScreenDim() { return glm::ivec2(_screenWidth, _screenHeight); }
 	glm::mat4 getcameramatrix() { return _cameraMatrix; }
 
 	//update
