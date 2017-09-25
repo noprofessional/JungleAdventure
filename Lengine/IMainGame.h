@@ -17,6 +17,7 @@ namespace Lengine {
 
 		Window*			getWindowPtr()						{ return &m_window; }
 		InputManager*	getInputManager()					{ return &m_inputManager; }
+		FpsLimiter*		getFpsLimiter()						{ return &m_fpsLimiter; }
 		void			setGameState(GameState setState)	{ m_gamestate = setState; }
 
 	protected:

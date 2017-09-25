@@ -14,7 +14,6 @@ public:
 	float getMaxFPS() { return m_maxFPS; }
 	float getTargetFPS() { return m_targetFPS; }
 
-	void begin();
 	void limit();
 	float calculateFPS();
 	float deltatime();

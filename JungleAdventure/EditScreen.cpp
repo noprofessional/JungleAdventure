@@ -20,7 +20,6 @@ EditScreen::EditScreen(Lengine::IMainGame* ownergame):IScreen(ownergame,EDIT_SCR
 
 EditScreen::~EditScreen()
 {
-	destroy();
 }
 
 void EditScreen::build()
@@ -62,9 +61,8 @@ void EditScreen::build()
 	m_playerTexture = Lengine::textureCache.gettexture("Textures/Player/IDLE.gif");
 
 	initUI();
-	m_boxes.clear();
-	m_lights.clear();
-
+	m_hasSelection = false;
+	m_stateChanged = true;
 }
 void EditScreen::initUI() {
 	glm::vec2 windowDim(m_game->getWindowPtr()->getscreenwidth(), m_game->getWindowPtr()->getscreenheight());
@@ -144,37 +142,41 @@ void EditScreen::initUI() {
 		b_debug->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onDebugButtonClicked, this));
 
 	}
-	//player, platform OR light
+	//player, BOX, tile OR light
 	{
 		const int GROUP_ID_ONE = 1;
 		glm::vec4 buttonSizeRec(0.0f, 0.0f, 20.0f, 20.0f);
 
-		float xPixelPos = 30.0f;
+		float xPixelPos = 23.0f;
 		float yPixelPos = yPixelOPoint - 85.0f;
-		float deltaXPixel = 63.0f;
+		float deltaXPixel = 48.0f;
 
 		b_player = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), buttonSizeRec, "Group2/PlayerButton", temp));
 		b_player->setGroupID(GROUP_ID_ONE);
 		b_player->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onPlayerSelected, this));
 
-		b_platform = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos+ deltaXPixel, yPixelPos), buttonSizeRec, "Group2/PlatformButton", temp));
-		b_platform->setGroupID(GROUP_ID_ONE);
-		b_platform->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onPlatformSelected, this));
+		b_box = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos+ deltaXPixel, yPixelPos), buttonSizeRec, "Group2/BOXButton", temp));
+		b_box->setGroupID(GROUP_ID_ONE);
+		b_box->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onBoxSelected, this));
+	
+		b_tile = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + 2*deltaXPixel, yPixelPos), buttonSizeRec, "Group2/TileButton", temp));
+		b_tile->setGroupID(GROUP_ID_ONE);
+		b_tile->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onTileSelected, this));
 
-		b_light = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos+2* deltaXPixel, yPixelPos), buttonSizeRec, "Group2/LightButton", temp));
+		b_light = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos+3* deltaXPixel, yPixelPos), buttonSizeRec, "Group2/LightButton", temp));
 		b_light->setGroupID(GROUP_ID_ONE);
 		b_light->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onLightSelected, this));
 
 	}
-	//platform widget 
+	//BOX widget 
 	{
 		//physic mode
 		{
 			const int GROUP_ID_TWO = 2;
 			glm::vec4 buttonSizeRec(0.0f, 0.0f, 20.0f, 20.0f);
-			float xPixelPos = 20.0f;
+			float xPixelPos = 25.0f;
 			float yPixelPos = yPixelOPoint - 115.0f;
-			float deltaXPixel = 50.0f;
+			float deltaXPixel = 63.0f;
 			b_rigid = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos, yPixelPos), buttonSizeRec, "Group1/RigidButton", temp));
 			b_rigid->setGroupID(GROUP_ID_TWO);
 			b_rigid->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onRigidButtonClicked, this));
@@ -187,9 +189,6 @@ void EditScreen::initUI() {
 			b_movable->setGroupID(GROUP_ID_TWO);
 			b_movable->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onMovableButtonClicked, this));
 			
-			b_void = static_cast<CEGUI::RadioButton*>(m_gui.createWidget("TaharezLook/RadioButton", glm::vec4(0.0f, 0.0f, xPixelPos + 3 * deltaXPixel, yPixelPos), buttonSizeRec, "Group1/VoidButton", temp));
-			b_void->setGroupID(GROUP_ID_TWO);
-			b_void->subscribeEvent(CEGUI::ToggleButton::EventSelectStateChanged, CEGUI::Event::Subscriber(&EditScreen::onVoidButtonClicked, this));
 		}
 		//width, height and angle
 		{
@@ -291,19 +290,14 @@ void EditScreen::initUI() {
 		s_green->setCurrentValue(255.0f);
 		s_blue->setCurrentValue(255.0f);
 		s_alpha->setCurrentValue(255.0f);
-		//player, platform, light choose player
+		//player, BOX, light choose player
 		b_player->setSelected(true);
-		b_platform->setSelected(false);
-		b_light->setSelected(false);
 		//place, select choose place
 		b_place->setSelected(true);
-		b_select->setSelected(false);
 		//debug default false
 		b_debug->setSelected(false);
 		//rigid, dynamic, moveable choose rigid
 		b_rigid->setSelected(true);
-		b_dynamic->setSelected(false);
-		b_movable->setSelected(false);
 		//set all spinner current value
 		sp_width->setCurrentValue(1.0f);
 		sp_height->setCurrentValue(1.0f);
@@ -319,8 +313,13 @@ void EditScreen::destroy()
 {
 	m_gui.destroy();
 	m_program.dispose();
+	m_lightPro.dispose();
 	m_debugRenderer.destroy();
 	m_spriteFont.dispose();
+	m_boxes = Boxes();
+	m_lights = Lights();
+	m_tiles = Tiles();
+	m_player = Player();
 }
 
 void EditScreen::process()
@@ -329,10 +328,60 @@ void EditScreen::process()
 	while (SDL_PollEvent(&evnt)) {
 		m_gui.injectEvent(evnt);
 		basicInputProcess(evnt);
-		if(evnt.type==SDL_MOUSEWHEEL)
-			if(!isMouseInUI())
-			// Linear scaling sucks for mouse wheel zoom so we multiply by getScale() instead.
+		if (evnt.type == SDL_MOUSEWHEEL && !isMouseInUI())
 			m_camera.offsetScale(m_camera.getscale()*evnt.wheel.y * 0.1f);
+	}
+	Lengine::InputManager* im = m_game->getInputManager();
+	if (im->isKEYpressed(SDLK_n)) {
+		if (m_tiles.hasSelection()) {
+			m_tiles.nextCandidate();
+			setSelectObject(ObjectMode::TILE);
+		}
+	}
+	
+	float xOffset = 0.0f;
+	float yOffset = 0.0f;
+	if (im->isKEYpressed(SDLK_d)) {
+		xOffset = 1.0f;
+	}
+	else if (im->isKEYpressed(SDLK_a)) {
+		xOffset = -1.0f;
+	}
+	if (im->isKEYpressed(SDLK_w)) {
+		yOffset = 1.0f;
+	}
+	else if (im->isKEYpressed(SDLK_s)) {
+		yOffset = -1.0f;
+	}
+	m_tiles.offsetSelectedPos(xOffset, yOffset);
+
+	if (m_needUpdate && m_selectMode == SelectionMode::SELECT && m_hasSelection) {
+		//update any select temp object
+		switch (m_objectMode)
+		{
+		case ObjectMode::BOX:{
+			glm::vec4 desRec;
+			float angle;
+			PhysicalMode physicalMode;
+			m_boxes.showSelectedInfo(desRec, angle, physicalMode);
+			m_boxes.replaceSelected(Box(glm::vec4(desRec.x,desRec.y,m_dimension), m_angle, m_physicMode));
+			break;
+		}
+		case ObjectMode::TILE: {
+			glm::vec4 desRec;
+			float depth;
+			m_tiles.showSelectedInfo(desRec, glm::vec4(), std::string(), depth);
+			m_tiles.replaceSelected(Tile(desRec, m_uvSelector.getUV(), m_texture, m_depth));
+			break;
+		}
+		case ObjectMode::LIGHT: {
+			glm::vec2 pos;	float radius;	Lengine::ColorRGBA8 color;
+			m_lights.showSelectedInfo(pos, radius, color);
+			m_lights.replaceSelected(Light(pos, radius, color));
+			break;
+		}
+		}
+		m_needUpdate = false;
 	}
 }
 
@@ -342,48 +391,6 @@ void EditScreen::update()
 	m_UIcamera.change();
 	m_camera.change();
 	m_backGround.update();
-	if (m_selectMode == SelectionMode::SELECT && m_selectedBoxIndexes.size() > 1) {
-		if (m_game->getInputManager()->isKEYpressed(SDLK_d)) {
-			for (auto& i : m_selectedBoxIndexes) {
-				m_boxes[i].tempPos += glm::vec2(1.0f,0.0f);
-			}
-		}
-		else if (m_game->getInputManager()->isKEYpressed(SDLK_a)) {
-			for (auto& i : m_selectedBoxIndexes) {
-				m_boxes[i].tempPos -= glm::vec2(1.0f, 0.0f);
-			}
-		}
-		if (m_game->getInputManager()->isKEYpressed(SDLK_w)) {
-			for (auto& i : m_selectedBoxIndexes) {
-				m_boxes[i].tempPos += glm::vec2(0.0f, 1.0f);
-			}
-		}
-		else if (m_game->getInputManager()->isKEYpressed(SDLK_s)) {
-			for (auto&i : m_selectedBoxIndexes) {
-				m_boxes[i].tempPos -= glm::vec2(0.0f, 1.0f);
-			}
-		}
-	}
-	else if (m_needUpdate && m_selectMode == SelectionMode::SELECT && m_currentObjectIndex != -1) {
-		//update any select temp object
-		if (m_objectMode == ObjectMode::PLATFORM) {
-			Box& b = m_boxes[m_currentObjectIndex];
-			b.texture = m_texture;
-			b.color = m_color;
-			b.dimension = m_dimension;
-			b.tempAngle = m_angle;
-			b.physicMode = m_physicMode;
-			b.depth = m_depth;
-		}else if (m_objectMode == ObjectMode::LIGHT) {
-			Light& L = m_lights[m_currentObjectIndex];
-			L.color = m_color;
-			L.size = m_size;
-		}
-		else {
-			m_player.tempSetAll(glm::vec4(m_player.getTempPos(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
-		}
-		m_needUpdate = false;
-	}
 	//m_world->Step(1.0/60.0f,3,8);
 }
 
@@ -413,27 +420,26 @@ void EditScreen::drawScreen(){
 
 		//default aligned position to mouse world coordinates
 		glm::vec2 alignedPos = getMouseWorldCords();
-		int x = floor(alignedPos.x);
-		int y = floor(alignedPos.y);
-		alignedPos = glm::vec2(x+0.5f, y+0.5f);
+		float x = floor(alignedPos.x*2.0f + 0.5f);
+		float y = floor(alignedPos.y*2.0f + 0.5f);
+		alignedPos = glm::vec2(x / 2.0f, y / 2.0f);
 
-		if (m_objectMode == ObjectMode::PLATFORM) {
-			m_tempBox.tempSetAll(glm::vec4(alignedPos,m_dimension),m_uvRec, m_angle,m_depth, m_color, m_texture, m_physicMode);
-			m_tempBox.clampedDraw(&m_spriteBatch);
+		if (m_objectMode == ObjectMode::BOX) {
+			m_tempBox = Box(glm::vec4(getMouseWorldCords(), m_dimension), m_angle, m_physicMode);
+		}
+		else if (m_objectMode == ObjectMode::TILE) {
+			m_tempTile = Tile(glm::vec4(alignedPos, m_dimension), m_uvSelector.getUV(), m_texture, m_depth);
+			m_tempTile.draw(&m_spriteBatch);
 		}
 		else if (m_objectMode == ObjectMode::PLAYER) {
-			m_tempPlayer.tempSetAll(glm::vec4(getMouseWorldCords(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
-			m_tempPlayer.tempDraw(&m_spriteBatch);
+			m_tempPlayer = Player(glm::vec4(getMouseWorldCords(), PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET);
+			m_tempPlayer.draw(&m_spriteBatch);
 		}
 	}
-	//draw BOX and PLAYER existed
-	for (int i = 0;i < m_boxes.size();i++) {
-		m_boxes[i].clampedDraw(&m_spriteBatch);
-	}
-	if (m_player.getTexture()) {
-		//Only draw there is a player 
-		m_player.tempDraw(&m_spriteBatch);
-	}
+
+	m_tiles.draw(&m_spriteBatch);
+	m_player.draw(&m_spriteBatch);
+	
 	m_spriteBatch.end();
 	m_spriteBatch.renderBatch();
 
@@ -448,13 +454,11 @@ void EditScreen::drawScreen(){
 	//draw preview and lights
 	if (m_selectMode == SelectionMode::PLACE && (!isMouseInUI())) {
 		if (m_objectMode == ObjectMode::LIGHT) {
-			m_tempLight.tempSetAll( getMouseWorldCords(),m_size,m_color );
+			m_tempLight = Light(getMouseWorldCords(), m_size, m_color);
 			m_tempLight.draw(&m_lightSprite);
 		}
 	}
-	for (int i = 0;i < m_lights.size();i++) {
-			m_lights[i].draw(&m_lightSprite);
-	}
+	m_lights.draw(&m_lightSprite);
 	m_lightSprite.end();
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	m_lightSprite.renderBatch();
@@ -469,50 +473,30 @@ void EditScreen::drawDebug() {
 		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(-1000.0f, 0.0f), Lengine::ColorRGBA8(255, 0, 0, 100));
 		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(0.0f,1000.0f), Lengine::ColorRGBA8(0, 255, 0, 255));
 		m_debugRenderer.drawLine(glm::vec2(0.0f), glm::vec2(0.0f, -1000.0f), Lengine::ColorRGBA8(0, 255, 0, 100));
-		for (auto&B : m_boxes) {
-			B.tempDebugDraw(&m_debugRenderer);
-		}
-		for (auto&L : m_lights) {
-			L.debugDraw(&m_debugRenderer);
-		}
-		m_player.tempDebugDraw(&m_debugRenderer);
-		
 	}
+	m_player.debugDraw(&m_debugRenderer);
+	m_boxes.debugDraw(&m_debugRenderer);
+	m_tiles.debugDraw(&m_debugRenderer, m_debuging);
+	m_lights.debugDraw(&m_debugRenderer, m_debuging);
+
 	if (m_selectMode == SelectionMode::PLACE) {
 		if (!isMouseInUI()) {
 			switch (m_objectMode) {
-			case ObjectMode::PLATFORM:
-				m_tempBox.tempDebugDraw(&m_debugRenderer);
+			case ObjectMode::BOX:
+				m_tempBox.debugDraw(&m_debugRenderer);
+				break;
+			case ObjectMode::TILE:
+				m_tempTile.debugDraw(&m_debugRenderer);
 				break;
 			case ObjectMode::LIGHT:
 				m_tempLight.debugDraw(&m_debugRenderer);
 				break;
 			case ObjectMode::PLAYER:
-				m_tempPlayer.tempDebugDraw(&m_debugRenderer);
+				m_tempPlayer.debugDraw(&m_debugRenderer);
 				break;
 			}
 		}
 	}
-	else {
-		if (m_selectedBoxIndexes.size() > 1) {
-			for (auto& i : m_selectedBoxIndexes) {
-				m_boxes[i].tempDebugDraw(&m_debugRenderer, true);
-			}
-		}
-		else if (m_currentObjectIndex != -1) {
-			switch (m_objectMode) {
-			case ObjectMode::PLATFORM:
-				m_boxes[m_currentObjectIndex].tempDebugDraw(&m_debugRenderer, true);
-				break;
-			case ObjectMode::LIGHT:
-				m_lights[m_currentObjectIndex].debugDraw(&m_debugRenderer, true);
-				break;
-			case ObjectMode::PLAYER:
-				m_player.tempDebugDraw(&m_debugRenderer, true);
-				break;
-			}
-		}
-		}
 	
 	m_debugRenderer.end();
 	m_debugRenderer.render(camMatrix, 1.0f);
@@ -533,7 +517,8 @@ void EditScreen::drawUI() {
 	addLable(static_cast<CEGUI::Window*>(b_place), "Place");
 	addLable(static_cast<CEGUI::Window*>(b_debug), "Debug");
 	addLable(static_cast<CEGUI::Window*>(b_player), "Player");
-	addLable(static_cast<CEGUI::Window*>(b_platform), "Platform");
+	addLable(static_cast<CEGUI::Window*>(b_box), "Box");
+	addLable(static_cast<CEGUI::Window*>(b_tile), "Tile");
 	addLable(static_cast<CEGUI::Window*>(b_light), "Light");
 	addLable(static_cast<CEGUI::Window*>(sp_width), "Width");
 	addLable(static_cast<CEGUI::Window*>(sp_height), "Height");
@@ -542,7 +527,6 @@ void EditScreen::drawUI() {
 	addLable(static_cast<CEGUI::Window*>(b_rigid), "Rigid");
 	addLable(static_cast<CEGUI::Window*>(b_dynamic), "Dynamic");
 	addLable(static_cast<CEGUI::Window*>(b_movable), "Movable");
-	addLable(static_cast<CEGUI::Window*>(b_void), "Void");
 	addLable(static_cast<CEGUI::Window*>(sp_size), "Size");
 
 	float QUAD_SIZE = 50.0f;
@@ -552,7 +536,9 @@ void EditScreen::drawUI() {
 	worldCords += offset;
 	m_spriteBatch.draw(glm::vec4(worldCords.x, worldCords.y, QUAD_SIZE, QUAD_SIZE), 1.0f, m_color);
 
-	m_uvSelector.drawTexture(&m_spriteBatch);
+	if (cb_texture->isVisible()) {
+		m_uvSelector.drawTexture(&m_spriteBatch);
+	}
 
 	m_spriteBatch.end();
 	m_spriteBatch.renderBatch();
@@ -565,9 +551,9 @@ void EditScreen::drawUI() {
 		m_debugRenderer.render(m_UIcamera.getcameramatrix(), 1.0f);
 	}
 
+	setObjectWidgetVisible();
 	m_gui.draw();
 }
-
 
 bool EditScreen::isMouseInUI() {
 	glm::vec2 UImouseCords = m_UIcamera.wintoworld(m_game->getInputManager()->getmousecords());
@@ -593,12 +579,12 @@ glm::vec2 EditScreen::getMouseWorldCords() {
 void EditScreen::addLable(CEGUI::Window*widget, const char* text) {
 	if (widget->isVisible()) {
 		float distance = 7.0f;		//lable has 5pix distance from the wiget
-		float scale = 0.56f;
+		float scale = 0.54f;
 		glm::vec2 pos(widget->getPixelPosition().d_x, widget->getPixelPosition().d_y);
 		pos = m_UIcamera.wintoworld(pos);
 		pos += glm::vec2(widget->getPixelSize().d_width / 2.0f, distance);
 		m_spriteFont.draw(m_spriteBatch, text, pos, glm::vec2(scale), 1.0f,
-			Lengine::ColorRGBA8(255, 255, 255, 255), Lengine::Justification::MIDDLE);
+			Lengine::ColorRGBA8(0, 0, 0, 255), Lengine::Justification::MIDDLE);
 	}
 }
 void EditScreen::addRightLable(CEGUI::Window*widget, const char* text) {
@@ -610,62 +596,6 @@ void EditScreen::addRightLable(CEGUI::Window*widget, const char* text) {
 		pos += glm::vec2(widget->getPixelSize().d_width + distance, -widget->getPixelSize().d_height / 2.0f);
 		m_spriteFont.draw(m_spriteBatch, text, pos, glm::vec2(scale), 1.0f, Lengine::ColorRGBA8(255, 255, 255, 255));
 	}
-}
-void EditScreen::setSelectObject(ObjectMode objectMode, int index) {
-	b_player->setVisible(false);	b_player->setSelected(false);
-	b_platform->setVisible(false);	b_platform->setSelected(false);
-	b_light->setVisible(false);		b_light->setSelected(false);
-	switch (objectMode)
-	{
-	case ObjectMode::PLAYER:
-		b_player->setVisible(true);
-		b_player->setSelected(true);
-		break;
-	case ObjectMode::PLATFORM: {
-		Box& B = m_boxes[index];
-		b_platform->setVisible(true);
-		b_platform->setSelected(true);
-		sp_width->setCurrentValue(B.dimension.x);
-		sp_height->setCurrentValue(B.dimension.y);
-		sp_angle->setCurrentValue(B.tempAngle);
-		sp_depth->setCurrentValue(B.depth);
-		s_red->setCurrentValue(B.color.r);
-		s_green->setCurrentValue(B.color.g);
-		s_blue->setCurrentValue(B.color.b);
-		s_alpha->setCurrentValue(B.color.a);
-		cb_texture->setText(CEGUI::String(B.texture->filePath));
-
-		m_texture = B.texture;
-
-		m_uvSelector.updateTexture(B.texture);
-		m_uvSelector.setUV(B.uvRect);
-
-		switch (B.physicMode) {
-		case PhysicMode::RIGID:
-			b_rigid->setSelected(true);
-			break;
-		case PhysicMode::DYNAMIC:
-			b_dynamic->setSelected(true);
-			break;
-		case PhysicMode::MOVABLE:
-			b_movable->setSelected(true);
-			break;
-		case  PhysicMode::VOIDSPACE:
-			b_void->setSelected(true);
-		}
-		break;
-	}
-	case ObjectMode::LIGHT:
-		b_light->setVisible(true);
-		b_light->setSelected(true);
-		sp_size->setCurrentValue(m_lights[index].size);
-		s_red->setCurrentValue(m_lights[index].color.r);
-		s_green->setCurrentValue(m_lights[index].color.g);
-		s_blue->setCurrentValue(m_lights[index].color.b);
-		s_alpha->setCurrentValue(m_lights[index].color.a);
-		break;
-	}
-	m_currentObjectIndex = index;
 }
 void EditScreen::changeCamera()
 {
@@ -688,42 +618,85 @@ void EditScreen::changeCamera()
 		m_camera.setscale(32.0f);
 	}
 }
-bool EditScreen::inWhichTopBox(const glm::vec2& mouseCords, int& boxReturnIndex) {
-	
-	int preseveSpace = (m_boxes.size() > 100 ? m_boxes.size() : 100);
-	int* boxIndexes = new int[preseveSpace];
+void EditScreen::setSelectObject(ObjectMode objectMode) {
+	switch (objectMode)
+	{
+	case ObjectMode::PLAYER:
+		b_player->setSelected(true);
+		break;
+	case ObjectMode::BOX: {
+		glm::vec4 desRec;
+		float angle;
+		PhysicalMode physicalMode;
+		m_boxes.showSelectedInfo(desRec, angle,physicalMode);
 
-	int indexNum = 0;
-	for (int i = 0;i < m_boxes.size();i++) {
-		Box& B = m_boxes[i];
-		if (B.isInBox(mouseCords))
-			boxIndexes[indexNum++] = i;
-	}
+		b_box->setVisible(true);
+		b_box->setSelected(true);
+		sp_width->setCurrentValue(desRec.z);
+		sp_height->setCurrentValue(desRec.w);
+		sp_angle->setCurrentValue(angle);
+		s_red->setCurrentValue(255);
+		s_green->setCurrentValue(255);
+		s_blue->setCurrentValue(255);
+		s_alpha->setCurrentValue(255);
 
-	if (indexNum) {
-		int topboxIndex = boxIndexes[0];
-		for (int i = 0;i < indexNum;i++) {
-			if (m_boxes[topboxIndex].depth < m_boxes[boxIndexes[i]].depth)
-				topboxIndex = boxIndexes[i];
+		switch (physicalMode) {
+		case PhysicalMode::RIGID:
+			b_rigid->setSelected(true);
+			break;
+		case PhysicalMode::DYNAMIC:
+			b_dynamic->setSelected(true);
+			break;
+		case PhysicalMode::MOVABLE:
+			b_movable->setSelected(true);
+			break;
 		}
-		boxReturnIndex = topboxIndex;
-		delete[] boxIndexes;
-		return true;
+
+		break;
 	}
-	else {
-		delete[] boxIndexes;
-		return false;
+	case ObjectMode::TILE: {
+		glm::vec4 desRec;
+		glm::vec4 uvRec;
+		std::string texturePath;
+		float depth;
+		m_tiles.showSelectedInfo(desRec, uvRec, texturePath, depth);
+
+		b_tile->setSelected(true);
+		sp_width->setCurrentValue(desRec.z);
+		sp_height->setCurrentValue(desRec.w);
+		sp_depth->setCurrentValue(depth);
+		s_red->setCurrentValue(255);
+		s_green->setCurrentValue(255);
+		s_blue->setCurrentValue(255);
+		s_alpha->setCurrentValue(255);
+		cb_texture->setText(CEGUI::String(texturePath));
+
+		m_texture = Lengine::textureCache.getSTClampedTexture(texturePath);
+		m_uvSelector.updateTexture(m_texture);
+		m_uvSelector.setUV(uvRec);
+
+		break;
 	}
-}
-bool EditScreen::inSameDepthBox(const glm::vec2& mouseCords, int& boxReturnIndex){
-	for (int i = 0;i < m_boxes.size();i++) {
-		Box& B = m_boxes[i];
-		if (B.isInBox(mouseCords) && B.depth == m_depth) {
-			boxReturnIndex = i;
-			return true;
-		}
+	case ObjectMode::LIGHT: {
+		b_light->setSelected(true);
+
+		float size;
+		Lengine::ColorRGBA8 color;
+		m_lights.showSelectedInfo(glm::vec2(), size, color);
+
+		sp_size->setCurrentValue(size);
+		s_red->setCurrentValue(color.r);
+		s_green->setCurrentValue(color.g);
+		s_blue->setCurrentValue(color.b);
+		s_alpha->setCurrentValue(color.a);
+
+		break;
 	}
-	return false;
+	}
+	m_hasSelection = true;
+	m_movingObject = true;
+	m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&EditScreen::onObjectMove, this));
+
 }
 
 void EditScreen::addListToComboBox(const char* desDirectory,CEGUI::Combobox* comboBox) {
@@ -754,15 +727,85 @@ void EditScreen::addListToComboBox(const char* desDirectory,CEGUI::Combobox* com
 		}
 	}
 }
-void EditScreen::setPlatformWidgetVisible(bool visibility) {
+void EditScreen::setObjectWidgetVisible() {
+	if (m_stateChanged) {
+
+		b_player->setVisible(false);
+		b_box->setVisible(false);
+		b_tile->setVisible(false);
+		b_light->setVisible(false);
+		setBoxWidgetVisible(false);
+		setTileWidgetVisible(false);
+		setLightWidgetVisible(false);
+
+		switch (m_selectMode)
+		{
+		case SelectionMode::SELECT:
+		{
+			if (m_hasSelection) {
+				switch (m_objectMode)
+				{
+				case ObjectMode::PLAYER:
+					b_player->setVisible(true);
+					break;
+				case ObjectMode::BOX:
+					b_box->setVisible(true);
+					setBoxWidgetVisible(true);
+					break;
+				case ObjectMode::TILE:
+					b_tile->setVisible(true);
+					setTileWidgetVisible(true);
+					break;
+				case ObjectMode::LIGHT:
+					b_light->setVisible(true);
+					setLightWidgetVisible(true);
+					break;
+				}
+			}
+			break;
+		}
+		case SelectionMode::PLACE:
+		{
+			b_player->setVisible(true);
+			b_box->setVisible(true);
+			b_tile->setVisible(true);
+			b_light->setVisible(true);
+			switch (m_objectMode)
+			{
+			case ObjectMode::PLAYER:
+				b_player->setVisible(true);
+				break;
+			case ObjectMode::BOX:
+				b_box->setVisible(true);
+				setBoxWidgetVisible(true);
+				break;
+			case ObjectMode::TILE:
+				b_tile->setVisible(true);
+				setTileWidgetVisible(true);
+				break;
+			case ObjectMode::LIGHT:
+				b_light->setVisible(true);
+				setLightWidgetVisible(true);
+				break;
+			}
+			break;
+		}
+		}
+		m_stateChanged = false;
+	}
+}
+void EditScreen::setBoxWidgetVisible(bool visibility) {
 	b_rigid->setVisible(visibility);
 	b_dynamic->setVisible(visibility);
 	b_movable->setVisible(visibility);
-	b_void->setVisible(visibility);
 
 	sp_width->setVisible(visibility);
 	sp_height->setVisible(visibility);
 	sp_angle->setVisible(visibility);
+}
+void EditScreen::setTileWidgetVisible(bool visibility) {
+	sp_width->setVisible(visibility);
+	sp_height->setVisible(visibility);
 	sp_depth->setVisible(visibility);
 
 	cb_texture->setVisible(visibility);
@@ -770,6 +813,8 @@ void EditScreen::setPlatformWidgetVisible(bool visibility) {
 void EditScreen::setLightWidgetVisible(bool visibility) {
 	s_alpha->setVisible(visibility);
 	sp_size->setVisible(visibility);
+	if (!visibility)
+		s_alpha->setCurrentValue(255);
 }
 
 bool EditScreen::onWindowSelecte(const CEGUI::EventArgs& ea) {
@@ -807,44 +852,36 @@ bool EditScreen::onMouseClicked(const CEGUI::EventArgs& ea) {
 	const CEGUI::MouseEventArgs& M = static_cast<const CEGUI::MouseEventArgs&>(ea);
 	glm::vec2 m_mouseCords = getMouseWorldCords();
 
-	if (M.button == CEGUI::LeftButton&&m_selectMode == SelectionMode::PLACE) {
+	if (M.button == CEGUI::RightButton) {
+
+		m_boxes.deleteBox(m_mouseCords);
+		m_tiles.deleteTile(m_mouseCords);
+		m_lights.deleteLight(m_mouseCords);
+
+		return true;
+	}
+	else if (M.button == CEGUI::LeftButton&&m_selectMode == SelectionMode::PLACE) {
 		glm::vec2 UImouseCords = m_UIcamera.wintoworld(m_game->getInputManager()->getmousecords());
 		if (m_uvSelector.isInSelector(UImouseCords)) {
 			m_uvSelector.updateUV(UImouseCords);
-			m_uvRec = m_uvSelector.getUV();
 			return true;
 		}
 		switch (m_objectMode)
 			{
-			case  ObjectMode::PLATFORM:
-				m_boxes.push_back(Box());
-				m_boxes.back()= m_tempBox;
+			case  ObjectMode::BOX:
+				m_boxes.addBox(m_tempBox);
+				break;
+			case ObjectMode::TILE:
+				m_tiles.addTile(m_tempTile);
 				break;
 			case  ObjectMode::LIGHT:
-				m_lights.push_back(Light{ m_mouseCords, m_size, m_color });
+				m_lights.addLight(m_tempLight);
 				break;
 			case  ObjectMode::PLAYER:
-				m_player.tempSetAll(glm::vec4(m_mouseCords, PLAYER_RENDER_DIM), PLAYER_COLLISOIN_DIM, PLAYER_POS_OFFSET, m_playerTexture);
+				m_player = m_tempPlayer;
 				break;
 			}
 			return true;
-	}
-	else if (M.button == CEGUI::RightButton&&m_selectMode == SelectionMode::PLACE) {
-		
-		int sameDepthBoxIndex = 0;
-		if (inSameDepthBox(m_mouseCords, sameDepthBoxIndex)) {
-			m_boxes[sameDepthBoxIndex] = m_boxes.back();
-			m_boxes.pop_back();
-		}
-
-		for (auto&L : m_lights) {
-			if (L.isInLight(m_mouseCords)) {
-				L = m_lights.back();
-				m_lights.pop_back();
-				break;
-			}
-		}
-		return true;
 	}
 	return true;
 }
@@ -852,60 +889,36 @@ bool EditScreen::onMouseDown(const CEGUI::EventArgs& ea) {
 	const CEGUI::MouseEventArgs& ma = static_cast<const CEGUI::MouseEventArgs&>(ea);
 	if (m_selectMode == SelectionMode::SELECT&&ma.button == CEGUI::LeftButton) {
 
+		Lengine::InputManager* im = m_game->getInputManager();
+
+		bool controlDown = im->isKEYdown(SDLK_LCTRL) || im->isKEYdown(SDLK_RCTRL);
+		if (!controlDown) {
+			m_boxes.clearSelection();
+			m_tiles.clearSelection();
+			m_lights.clearSelection();
+		}
+
 		m_mouseCords = getMouseWorldCords();
 
-		int sameDepthBoxIndex =0;
-		bool inBox = inSameDepthBox(m_mouseCords, sameDepthBoxIndex);
-		bool controlDown = m_game->getInputManager()->isKEYdown(SDLK_LCTRL)
-						|| m_game->getInputManager()->isKEYdown(SDLK_RCTRL);
-		if (inBox) {
-			setSelectObject(ObjectMode::PLATFORM, sameDepthBoxIndex);
-			m_movingObject = true;
-			m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&EditScreen::onObjectMove, this));
-			if (controlDown) {
-				bool same = false;
-				for (auto& i : m_selectedBoxIndexes) {
-					if (sameDepthBoxIndex == i) {
-						i = m_selectedBoxIndexes.back();
-						m_selectedBoxIndexes.pop_back();
-						same = true;
-						break;
-					}
-				}
-				if (!same) {
-					m_selectedBoxIndexes.push_back(sameDepthBoxIndex);
-				}
-				return true;
-			}
-			else {
-				m_selectedBoxIndexes.resize(1);
-				m_selectedBoxIndexes[0] = sameDepthBoxIndex;
-				return true;
-			}
+		if (m_boxes.selectBox(m_mouseCords)) {
+			setSelectObject(ObjectMode::BOX);
+			return true;
 		}
-		else if (controlDown) {
+
+		if (m_tiles.selectTile(m_mouseCords, controlDown)) {
+			setSelectObject(ObjectMode::TILE);
 			return true;
 		}
 		
-		//check if mouse is in lights
-		for (int i = 0;i < m_lights.size();i++) {
-			Light& L = m_lights[i];
-			if (L.isInLight(m_mouseCords))
-			{
-				setSelectObject(ObjectMode::LIGHT, i);
-				m_movingObject = true;
-				m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&EditScreen::onObjectMove, this));
-				return true;
-			}
+		if (m_lights.selectLight(m_mouseCords)) {
+			setSelectObject(ObjectMode::LIGHT);
+			return true;
 		}
 
 		//check if mouse is in player
-		if (m_player.isInPlayer(m_mouseCords))
+		if (m_player.selectPlayer(m_mouseCords))
 		{
-			//there is only one player
-			setSelectObject(ObjectMode::PLAYER, 0);
-			m_movingObject = true;
-			m_gui.m_root->subscribeEvent(CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&EditScreen::onObjectMove, this));
+			setSelectObject(ObjectMode::PLAYER);
 			return true;
 		}
 
@@ -918,20 +931,20 @@ bool EditScreen::onMouseDown(const CEGUI::EventArgs& ea) {
 }
 bool EditScreen::onObjectMove(const CEGUI::EventArgs& ea) {
 	if (m_movingObject) {
-		glm::vec2 mouseGridPos(floor(getMouseWorldCords().x) + 0.5f, floor(getMouseWorldCords().y) + 0.5f);
-		glm::vec2 preMouseGridPos(floor(m_mouseCords.x) + 0.5f, floor(m_mouseCords.y) + 0.5f);
-		glm::vec2 offset = mouseGridPos - preMouseGridPos;
+		glm::vec2 offset = getMouseWorldCords() - m_mouseCords;
 		m_mouseCords = getMouseWorldCords();
 		switch (m_objectMode)
 		{
 		case ObjectMode::PLAYER:
-			m_player.getTempPosReference() += offset;
+			m_player.changePos(offset.x, offset.y);
 			break;
-		case ObjectMode::PLATFORM:
-			m_boxes[m_currentObjectIndex].tempPos += offset;
+		case ObjectMode::BOX:
+			m_boxes.offsetSelectedPos(offset.x, offset.y);
 			break;
 		case ObjectMode::LIGHT:
-			m_lights[m_currentObjectIndex].centerPos += offset;
+			m_lights.offsetSelectedPos(offset.x, offset.y);
+			break;
+		default:
 			break;
 		}
 	}
@@ -980,12 +993,12 @@ bool EditScreen::onSelectMode(const CEGUI::EventArgs& ea) {
 	if (b_select->isSelected()) {
 		m_selectMode = SelectionMode::SELECT;
 		m_currentObjectIndex = -1;
-		m_selectedBoxIndexes.clear();
-		b_platform->setVisible(false);
-		b_player->setVisible(false);
-		b_light->setVisible(false);
-		setPlatformWidgetVisible(false);
-		setLightWidgetVisible(false);
+
+		m_boxes.clearSelection();
+		m_tiles.clearSelection();
+		m_lights.clearSelection();
+		m_hasSelection = false;
+		m_stateChanged = true;
 	}
 	return true;
 }
@@ -993,10 +1006,12 @@ bool EditScreen::onPlaceMode(const CEGUI::EventArgs& ea) {
 	if (b_place->isSelected()) {
 		m_selectMode = SelectionMode::PLACE;
 		m_currentObjectIndex = -1;
-		b_platform->setVisible(true);
-		b_player->setVisible(true);
-		b_light->setVisible(true);
-		b_player->setSelected(true);
+
+		m_boxes.clearSelection();
+		m_tiles.clearSelection();
+		m_lights.clearSelection();
+		m_hasSelection = false;
+		m_stateChanged = true;
 	}
 	return true;
 }
@@ -1004,50 +1019,47 @@ bool EditScreen::onPlaceMode(const CEGUI::EventArgs& ea) {
 bool EditScreen::onPlayerSelected(const CEGUI::EventArgs& ea) {
 	if (b_player->isSelected()) {
 		m_objectMode = ObjectMode::PLAYER;
-		setPlatformWidgetVisible(false);
-		setLightWidgetVisible(false);
+		m_stateChanged = true;
 	}
 	return true;
 }
-bool EditScreen::onPlatformSelected(const CEGUI::EventArgs& ea) {
-	if (b_platform->isSelected()) {
-		m_objectMode = ObjectMode::PLATFORM;
-		m_color.a = 255;
-		setLightWidgetVisible(false);
-		setPlatformWidgetVisible(true);
+bool EditScreen::onBoxSelected(const CEGUI::EventArgs& ea) {
+	if (b_box->isSelected()) {
+		m_objectMode = ObjectMode::BOX;
+		m_stateChanged = true;
+	}
+	return true;
+}
+bool EditScreen::onTileSelected(const CEGUI::EventArgs& ea) {
+	if (b_tile->isSelected()) {
+		m_objectMode = ObjectMode::TILE;
+		m_stateChanged = true;
 	}
 	return true;
 }
 bool EditScreen::onLightSelected(const CEGUI::EventArgs& ea) {
 	if (b_light->isSelected()) {
 		m_objectMode = ObjectMode::LIGHT;
-		setPlatformWidgetVisible(false);
-		setLightWidgetVisible(true);
+		m_stateChanged = true;
 	}
 	return true;
 }
 
 bool EditScreen::onRigidButtonClicked(const CEGUI::EventArgs& ea) {
 	if (b_rigid->isSelected())
-		m_physicMode = PhysicMode::RIGID;
+		m_physicMode = PhysicalMode::RIGID;
 	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onDynamicButtonClicked(const CEGUI::EventArgs& ea) {
 	if (b_dynamic->isSelected())
-		m_physicMode = PhysicMode::DYNAMIC;
+		m_physicMode = PhysicalMode::DYNAMIC;
 	m_needUpdate = true;
 	return true;
 }
 bool EditScreen::onMovableButtonClicked(const CEGUI::EventArgs& ea) {
 	if (b_movable->isSelected())
-		m_physicMode = PhysicMode::MOVABLE;
-	m_needUpdate = true;
-	return true;
-}
-bool EditScreen::onVoidButtonClicked(const CEGUI::EventArgs& ea) {
-	if (b_void->isSelected())
-		m_physicMode = PhysicMode::VOIDSPACE;
+		m_physicMode = PhysicalMode::MOVABLE;
 	m_needUpdate = true;
 	return true;
 }
@@ -1123,107 +1135,20 @@ bool EditScreen::onOKButtonClicked(const CEGUI::EventArgs& ea) {
 	switch (m_fileMode)
 	{
 	case FileMode::SAVE:
-		if (m_player.getTexture()) {
-			LevelWriterNReader::saveAsText(filePath, m_player, m_boxes, m_lights);
-			std::vector<unsigned char> frameData;
-			int width = getBoxMaxPos().x;
-			int height = getBoxMaxPos().y;
-			generateFrameData(width, height, frameData);
-			LevelWriterNReader::saveAsBinary(filePath + std::string(".level"), m_player, m_boxes, m_lights, frameData,width, height);
-			std::cout << "-------- Saved! --------\n";
-		}
-		else {
-			std::cout<<"Can't save without Player!\nPlease try angain after adding a player";
-		}
+		LevelWriterNReader::saveAsText(filePath, m_player, m_boxes, m_tiles, m_lights);
+
+		m_tiles.renderToTexture(m_camera);
+		LevelWriterNReader::saveAsBinary(filePath + std::string(".level"), m_player, m_boxes, m_tiles, m_lights);
+
+		std::cout << "-------- Saved! --------\n";
 		break;
 	case FileMode::LOAD:
-		LevelWriterNReader::readAsText(filePath, m_player, m_boxes, m_lights);
+		LevelWriterNReader::readAsText(filePath, m_player, m_boxes, m_tiles, m_lights);
+
 		std::cout << "-------- "<<filePath<<" Loaded! --------\n";
 		break;
 	}
 	w_file->setVisible(false);
 	return true;
 }
-glm::vec2 EditScreen::getBoxMaxPos() {
-	float Max_x = 0.0f;
-	float Max_y = 0.0f;
-	for (auto& B : m_boxes) {
-		if (B.tempPos.x > Max_x)
-			Max_x = B.tempPos.x;
-		if (B.tempPos.y > Max_y)
-			Max_y = B.tempPos.y;
-	}
-	float scale = m_camera.getscale();
-	int SW = m_game->getWindowPtr()->getscreenwidth();
-	int SH = m_game->getWindowPtr()->getscreenheight();
-	return glm::vec2(ceil(Max_x*scale / SW)*SW, ceil(Max_y*scale / SH)*SH);
-}
-void EditScreen::generateFrameData(int width,int height,std::vector<unsigned char>& out) {
-	GLuint frameBuffer;
-	GLuint frameTexture;
 
-	glGenFramebuffers(1, &frameBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-
-	glGenTextures(1, &frameTexture);
-	glBindTexture(GL_TEXTURE_2D, frameTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameTexture, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	Lengine::SpriteBatch frameBatch;
-	frameBatch.init();
-
-	int SCREENWIDTH = m_game->getWindowPtr()->getscreenwidth();
-	int SCREENHEIGHT = m_game->getWindowPtr()->getscreenheight();
-	m_frameCamera.init(SCREENWIDTH, SCREENHEIGHT);
-	m_frameCamera.setposition(glm::vec2(0.0f, 0.0f));
-	m_frameCamera.setscale(m_camera.getscale());
-
-	GLint vp[4];
-	glGetIntegerv(GL_VIEWPORT, vp);
-
-	m_program.use();
-
-	GLint samplerLoc = m_program.getuniformposition("mysampler");
-	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(samplerLoc, 0);
-
-	GLint camID = m_program.getuniformposition("P");
-
-	for (int x = 0;x <= SCREENWIDTH;x += SCREENWIDTH) {
-		for (int y = 0;y <= SCREENHEIGHT;y += SCREENHEIGHT) {
-			m_frameCamera.setposition(glm::vec2(x / m_frameCamera.getscale(), y / m_frameCamera.getscale()));
-			m_frameCamera.change();
-			glm::mat4 camMatrix1 = m_frameCamera.getcameramatrix();
-			glUniformMatrix4fv(camID, 1, GL_FALSE, &camMatrix1[0][0]);
-
-			frameBatch.begin(Lengine::GlyphSortType::BACK_TO_FRONT);
-
-			for (auto& B : m_boxes) {
-				B.clampedDraw(&frameBatch);
-			}
-
-			frameBatch.end();
-
-			glViewport(x, y, SCREENWIDTH, SCREENHEIGHT);
-			frameBatch.renderBatch();
-		}
-	}
-
-	m_program.unuse();
-
-	out.clear();
-	out.resize(width * height * 4);
-	glBindTexture(GL_TEXTURE_2D, frameTexture);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &out[0]);
-
-	glBindBuffer(GL_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(vp[0], vp[1], vp[2], vp[3]);
-
-	glDeleteTextures(1, &frameTexture);
-	glDeleteBuffers(1, &frameBuffer);
-}

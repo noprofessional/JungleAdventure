@@ -1,65 +1,50 @@
 #pragma once
-#include<Box2D/Box2D.h>
-#include<glm/glm.hpp>
-#include<Lengine/TextureCache.h>
-#include <Lengine/SpriteBatch.h>
-#include<Lengine/Vertex.h>
-#include<Lengine/DebugRender.h>
-enum PhysicMode {
+#include <vector>
+#include <glm/glm.hpp>
+#include <Box2D/Box2D.h>
+#include <Lengine/DebugRender.h>
+enum PhysicalMode {
 	RIGID,
 	DYNAMIC,
-	MOVABLE,
-	VOIDSPACE
+	MOVABLE
 };
-class Box
-{
+class Box {
 public:
 	Box();
+	Box(glm::vec4 DesRec, float Angle, PhysicalMode physicalMode);
 	~Box();
-	//for edit screen use
-	void tempSetAll(
-		const glm::vec4& desRec,
-		const float& tempAngle,
-		const float& depth,
-		const Lengine::ColorRGBA8& color,
-		Lengine::GLtexture* texture, 
-		const PhysicMode& physicMode);
 
-	//use in play screen
+	void debugDraw(Lengine::DebugRender * debugRenderer, bool selected);
 	void addToWorld(b2World* world);
 
-	//temp draw
-	void tempDraw(Lengine::SpriteBatch * spritebatch);
-	void tempDebugDraw(Lengine::DebugRender* debugRenderer, bool selected = false);
+	bool inBox(const glm::vec2& mouseCords);
 
-	//draw with information in 2dWorld
-	void draw(Lengine::SpriteBatch * spritebatch);
-	void clampedDraw(Lengine::SpriteBatch* spritebatch);
-	void debugDraw(Lengine::DebugRender * spritebatch);
+	void writeAsText(std::ofstream& fout)const ;
+	void readFromText(std::ifstream& fin);
 
-	//if pos is in box
-	bool isInBox(const glm::vec2 &pos);
+	void writeAsBinary(std::ofstream& fout)const;
+	void readFromBinary(std::ifstream& fin);
 
-	//-------- getter --------
-	//get the position after added to the world
-	glm::vec2 getpos()const { return glm::vec2(m_body->GetPosition().x, m_body->GetPosition().y); }
-	//get the angle after added to the world
-	float getangle() const{ return m_body->GetAngle(); }
-	//get the body after added to the world
-	b2Body* getbody() { return m_body; }
-
-	glm::vec2 tempPos;
-	glm::vec2 dimension;
-	Lengine::ColorRGBA8 color;
-	Lengine::GLtexture* texture=nullptr;
-	float tempAngle;
-	float depth;
-	PhysicMode physicMode;
 private:
-	glm::vec4 getRenderDesRec();
-	float getRenderAngle();
+	glm::vec4 m_desRec;
+	float m_angle;
+	PhysicalMode m_physicalMode;
 
-	b2Body * m_body = nullptr;		///not init in edit stage
-	bool isAddedToWorld = true;		///default to true
+	b2Body* m_body;
 };
+class Boxes {
+	void addBox(Box& box);
+	void selectBox(const glm::vec2& mouseCords);
+	void deleteBox(const glm::vec2& mouseCords);
+	void debugDraw(Lengine::DebugRender* debugRender,bool debugging);
+	void addToWorld(b2World* world);
 
+	void writeAsText(std::ofstream& fout);
+	void readFromText(std::ifstream& fin);
+
+	void writeAsBinary(std::ofstream& fout);
+	void readFromBinary(std::ifstream& fin);
+private:
+	std::vector<Box> m_boxes;
+	int m_selectedBoxIndex;
+};

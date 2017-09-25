@@ -14,7 +14,8 @@
 #include "TextureUVselector.h"
 enum class ObjectMode {
 	PLAYER,
-	PLATFORM,
+	BOX,
+	TILE,
 	LIGHT
 };
 enum class SelectionMode {
@@ -47,16 +48,13 @@ private:
 	glm::vec2 getMouseWorldCords();
 	void addLable(CEGUI::Window*widget,const char* text);
 	void addRightLable(CEGUI::Window*widget, const char* text);
-	void setSelectObject(ObjectMode objectMode, int index);
 	void changeCamera();
-	bool inWhichTopBox(const glm::vec2& mouseCords, int& boxReturnIndex);
-	bool inSameDepthBox(const glm::vec2& mouseCords,int& boxReturnIndex);
-	glm::vec2 getBoxMaxPos();
-	void generateFrameData(int width, int height, std::vector<unsigned char>& out);
 
-
+	void setSelectObject(ObjectMode objectMode);
 	void addListToComboBox(const char* desDirectory, CEGUI::Combobox* comboBox);
-	void setPlatformWidgetVisible(bool visible);
+	void setObjectWidgetVisible();
+	void setBoxWidgetVisible(bool visibility);
+	void setTileWidgetVisible(bool visibility);
 	void setLightWidgetVisible(bool visibility);
 
 	//////////////////////////////////////////////////////////////////////////
@@ -75,13 +73,13 @@ private:
 	bool onDebugButtonClicked(const CEGUI::EventArgs& ea);
 	bool onSelectMode(const CEGUI::EventArgs& ea);
 	bool onPlaceMode(const CEGUI::EventArgs& ea);
-	bool onPlatformSelected(const CEGUI::EventArgs& ea);
+	bool onBoxSelected(const CEGUI::EventArgs& ea);
+	bool onTileSelected(const CEGUI::EventArgs& ea);
 	bool onLightSelected(const CEGUI::EventArgs& ea);
 	bool onPlayerSelected(const CEGUI::EventArgs& ea);
 	bool onRigidButtonClicked(const CEGUI::EventArgs& ea);
 	bool onDynamicButtonClicked(const CEGUI::EventArgs& ea);
 	bool onMovableButtonClicked(const CEGUI::EventArgs& ea);
-	bool onVoidButtonClicked(const CEGUI::EventArgs& ea);
 	bool onWidthSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onHeightSpinnerChanged(const CEGUI::EventArgs& ea);
 	bool onAngleSpinnerChanged(const CEGUI::EventArgs& ea);
@@ -108,12 +106,12 @@ private:
 	CEGUI::RadioButton* b_place = nullptr;
 	CEGUI::ToggleButton* b_debug = nullptr;
 	CEGUI::RadioButton* b_player = nullptr;
-	CEGUI::RadioButton* b_platform = nullptr;
+	CEGUI::RadioButton* b_box = nullptr;
+	CEGUI::RadioButton* b_tile = nullptr;
 	CEGUI::RadioButton* b_light = nullptr;
 	CEGUI::RadioButton* b_rigid = nullptr;
 	CEGUI::RadioButton* b_dynamic = nullptr;
 	CEGUI::RadioButton* b_movable = nullptr;
-	CEGUI::RadioButton* b_void = nullptr;
 	CEGUI::Spinner* sp_width = nullptr;
 	CEGUI::Spinner* sp_height = nullptr;
 	CEGUI::Spinner* sp_angle = nullptr;
@@ -131,7 +129,7 @@ private:
 
 	ObjectMode m_objectMode = ObjectMode::PLAYER;
 	SelectionMode m_selectMode = SelectionMode::PLACE;
-	PhysicMode m_physicMode = PhysicMode::RIGID;
+	PhysicalMode m_physicMode = PhysicalMode::RIGID;
 	FileMode m_fileMode = FileMode::SAVE;
 
 	Lengine::Camera m_UIcamera;
@@ -140,6 +138,7 @@ private:
 	Lengine::ShaderPro m_program;
 	Lengine::ShaderPro m_lightPro;
 	Lengine::SpriteBatch m_spriteBatch;
+	Lengine::SpriteBatch m_secondBatch;
 	Lengine::SpriteBatch m_lightSprite;
 	Lengine::SpriteFont m_spriteFont;
 	Lengine::DebugRender m_debugRenderer;
@@ -156,20 +155,24 @@ private:
 	Lengine::ColorRGBA8 m_color;
 	Lengine::GLtexture* m_texture;
 	TextureUVselector m_uvSelector;
-	glm::vec4 m_uvRec;
 	Lengine::GLtexture* m_playerTexture;
 
 	int m_currentObjectIndex = -1;
-	std::vector<int> m_selectedBoxIndexes;
-	Player m_player;
-	std::vector<Box> m_boxes;
-	std::vector<Light> m_lights;
 
-	Tiles m_tiles;
-	Tile m_tempTile;
-	Player m_tempPlayer;
 	Box m_tempBox;
+	Boxes m_boxes;
+
+	Tile m_tempTile;
+	Tiles m_tiles;
+
+	Player m_tempPlayer;
+	Player m_player;
+
+	Lights m_lights;
 	Light m_tempLight;
+
+	bool m_hasSelection;
+	bool m_stateChanged;
 	BackGround m_backGround;
 
 };

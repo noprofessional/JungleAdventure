@@ -29,11 +29,11 @@ namespace Lengine {
 			while (m_gamestate == GameState::PLAY) {
 				//TODO: change to use delta time step
 
-				//update screen and get current screen
-				m_screenptr = m_list.update();
-
 				//update inputManager
 				m_inputManager.update();
+
+				//update screen and get current screen
+				m_screenptr = m_list.update();
 
 				//draw the current screen
 				m_window.clean();

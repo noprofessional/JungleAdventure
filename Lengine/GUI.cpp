@@ -66,6 +66,7 @@ namespace Lengine {
 	}
 	void GUI::showMouseCursor() {
 		m_context->getMouseCursor().show();
+		SDL_ShowCursor(0);
 	}
 	void GUI::hideMouseCursor() {
 		m_context->getMouseCursor().hide();

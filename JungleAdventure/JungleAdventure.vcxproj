@@ -105,6 +105,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(SolutionDir)Deps/include/;$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Debug/;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>

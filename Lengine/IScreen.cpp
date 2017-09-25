@@ -22,6 +22,7 @@ void IScreen::onEntry()
 
 void IScreen::onExit() {
 	m_state = ScreenState::NONE_STATE;
+	destroy();
 }
 
 void IScreen::loop() {

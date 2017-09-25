@@ -29,6 +29,16 @@ struct ColorRGBA8 {
 	GLubyte a;
 };
 
+const ColorRGBA8 WHITE(255, 255, 255, 255);
+const ColorRGBA8 RED(255, 0, 0, 255);
+const ColorRGBA8 BLUE(0, 0, 255, 255);
+const ColorRGBA8 GREEN(0, 255, 0, 255);
+
+const ColorRGBA8 MAGENTA(255, 0, 255, 255);
+const ColorRGBA8 YELLOW(255, 255, 0, 255);
+
+
+
 struct UV {
 	float u;
 	float v;

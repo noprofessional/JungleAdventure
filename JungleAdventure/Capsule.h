@@ -5,18 +5,25 @@
 class Capsule
 {
 public:
-	void init(b2World* world, const glm::vec4& posrec, float angle, bool fixedrotation);
+	Capsule();
+	Capsule(const glm::vec4& desRec, float angle, bool fixedRotation);
+	~Capsule();
 
-	void debugdraw(Lengine::DebugRender* debugrender);
+	void addToWorld(b2World* world);
+	bool inCapsule(const glm::vec2& mouseCords);
+	void debugdraw(Lengine::DebugRender* debugrender,bool isSelected);
 
 	glm::vec2			getpos()const	{ return glm::vec2(m_body->GetPosition().x, m_body->GetPosition().y); }
-	const glm::vec2&	getDim()const	{ return m_dimension; }
 	float				getangle()const { return m_body->GetAngle(); }
 	b2Body*				getbody()		{ return m_body; }
 
 private:
-	b2Body* m_body = nullptr;
+
+	glm::vec4 m_desRec;
+	float m_angle;
+	bool m_fixedRotation;
+
+	b2Body* m_body;
 	b2Fixture* m_fixtures[3];
-	glm::vec2 m_dimension;
 };
 

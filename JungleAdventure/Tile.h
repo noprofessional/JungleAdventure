@@ -14,14 +14,16 @@ public:
 	Tile(const glm::vec4& DesRec, const glm::vec4& UvRec, Lengine::GLtexture* Texture,float Depth);
 	~Tile();
 	void draw(Lengine::SpriteBatch* spriteBatch);
-	void debugDraw(Lengine::DebugRender* dr,bool selected);
+	void debugDraw(Lengine::DebugRender* dr,bool selected = false);
 	bool inTile(const glm::vec2& mouseCords);
 
-	void writeAsText(std::ofstream& fout);
+	void writeAsText(std::ofstream& fout) const;
 	void readFromText(std::ifstream& fin);
 
-	float getPositionX() { return m_desRec.x; }
-	float getPositionY() { return m_desRec.y; }
+	glm::vec4 getDesRec() { return m_desRec; }
+	void offsetPos(const float xOffset, const float& yOffset) { m_desRec.x += xOffset; m_desRec.y += yOffset; }
+	void showInfo(glm::vec4& desRec, glm::vec4& uvRec, std::string& texturePath, float& depth) const;
+	bool operator<(const Tile& B)const { return this->m_depth < B.m_depth; }
 
 private:
 	glm::vec4 m_desRec;
@@ -33,22 +35,29 @@ private:
 class Tiles {
 public:
 	void addTile(Tile& tile);
-	void selectTile(const glm::vec2& mouseCords, bool more);
-	void deleteTile();
+	bool selectTile(const glm::vec2& mouseCords, bool more);
+	void nextCandidate();
+	void deleteTile(const glm::vec2& mouseCords);
 
 	void draw(Lengine::SpriteBatch* sb);
-	void drawAsTexture(Lengine::SpriteBatch*sb);
+	void drawTexture(Lengine::SpriteBatch* sb,Lengine::Camera* cam);
 	void debugDraw(Lengine::DebugRender* dr, bool debugging);
 
-	void writeAsText(std::ofstream& fout);
-	void reasAsText(std::ifstream& fin);
+	void writeAsText(std::ofstream& fout)const;
+	void readFromText(std::ifstream& fin);
 
 	void renderToTexture(Lengine::Camera cam);
-	void writeAsBinary(std::ofstream& fout);
-	void readAsBinary(std::ifstream& fin);
+	void writeAsBinary(std::ofstream& fout) const;
+	void readFromBinary(std::ifstream& fin);
+
+	void showSelectedInfo(glm::vec4& desRec, glm::vec4& uvRec, std::string& texturePath, float& depth)const;
+	void offsetSelectedPos(const float& xOffset, const float& yOffset);
+	void replaceSelected(Tile& tile);
+	void clearSelection() { m_candidateIndex.clear();m_selectedIndex.clear(); }
+	bool hasSelection()const;
 
 private:
-	glm::vec2 getArea();
+	glm::vec4 getArea();
 
 	std::vector<Tile> m_tiles;
 	std::vector<int> m_candidateIndex;
@@ -57,9 +66,5 @@ private:
 	int m_texWidth;
 	int m_texHeight;
 	std::vector<unsigned char> m_textureData;
-};
-
-class RenderToTexture {
-public:
-	static void RenderTiles(Tiles& tiles, Lengine::Camera cam);
+	Lengine::GLtexture* m_texture;
 };

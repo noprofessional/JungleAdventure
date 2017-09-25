@@ -9,11 +9,10 @@ GameScreen::GameScreen(Lengine::IMainGame* ownergame):IScreen(ownergame,GAME_SCR
 
 GameScreen::~GameScreen()
 {
-	destroy();
 }
 
 void GameScreen::build() {
-	capture = true;
+
 	//window related init
 	m_background = BackGround(Lengine::ColorRGBA8(100, 100, 255, 255), 7);
 	m_background.setAsCurrent(m_game->getWindowPtr());
@@ -35,6 +34,8 @@ void GameScreen::build() {
 	m_spriteBatch.init();
 	m_lightBatch.init();
 
+	m_fontBatch.init("Fonts/eng.ttf", 32);
+
 	m_debugRender.init();
 	m_debuging = true;
 
@@ -46,32 +47,46 @@ void GameScreen::build() {
 	//set the gravity of the world
 	b2Vec2 Gravity(0.0f, -10.0f);
 	m_world = std::make_unique<b2World>(Gravity);
+
 	static ContactListener contactListener;
 	m_world->SetContactListener(&contactListener);
 
 	//load the level add to the world
-	int width;
-	int height;
-	std::vector<unsigned char> frameData;
-	LevelWriterNReader::readAsBinary("Levels/level1.txt.level", m_player, m_boxes, m_lights, frameData, width, height);
-	frameTexture = Lengine::textureCache.addTexture("Levels/level1.txt.level", width, height, frameData);
+	LevelWriterNReader::readAsBinary("Levels/test.txt.level", m_player, m_boxes, m_tiles, m_lights);
 
 	m_player.addToWorld(m_world.get());
-	for (auto & B : m_boxes) {
-		B.addToWorld(m_world.get());
-	}
+	m_boxes.addToWorld(m_world.get());
 
-	SDL_ShowCursor(1);
+	initUI();
+}
 
+void GameScreen::initUI() {
+	m_gui.init("GUI");
+	m_gui.loadScheme("TaharezLook.scheme");
+	m_gui.setFont("DejaVuSans-10");
+	m_gui.setMouseCursor("TaharezLook/MouseArrow");
+	m_gui.showMouseCursor();
+	b_back = static_cast<CEGUI::PushButton*>(m_gui.createWidget("TaharezLook/Button", glm::vec4(0.95f, 0.05f, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, 80.0f, 30.0f), "Root/Button"));
+	b_back->setText("Back");
+	b_back->subscribeEvent(CEGUI::PushButton::EventClicked, CEGUI::Event::Subscriber(&GameScreen::onBackClicked, this));
 }
 
 void GameScreen::destroy() {
+	if (m_world.get())
+	{
+		b2World* wptr = m_world.release();
+		delete wptr;
+	}
+	m_gui.destroy();
+	m_lightPro.dispose();
+	m_program.dispose();
 }
 
 void GameScreen::process() {
 	SDL_Event evnt;
 	while (SDL_PollEvent(&evnt)) {
 		basicInputProcess(evnt);
+		m_gui.injectEvent(evnt);
 	}
 }
 
@@ -106,14 +121,9 @@ void GameScreen::draw() {
 		m_spriteBatch.begin(Lengine::GlyphSortType::BACK_TO_FRONT);
 
 		m_player.draw(&m_spriteBatch);
-		/*for (auto& B : m_boxes) {
-			B.clampedDraw(&m_spriteBatch);
-		}*/
-		int SW = m_game->getWindowPtr()->getscreenwidth();
-		int SH = m_game->getWindowPtr()->getscreenheight();
-		float x = (-SW + frameTexture->width) / 2.0f / m_camera.getscale();
-		float y = (-SH + frameTexture->height) / 2.0f / m_camera.getscale();
-		m_spriteBatch.draw(glm::vec4(x,y, frameTexture->width/32.0f, frameTexture->height/32.0f), glm::vec4(0.0f, 1.0f, 1.0f, -1.0f), frameTexture->ids[0], 1.0f);
+
+		m_tiles.drawTexture(&m_spriteBatch, &m_camera);
+
 		m_spriteBatch.end();
 		
 		m_spriteBatch.renderBatch();
@@ -122,51 +132,85 @@ void GameScreen::draw() {
 	}
 	//light render
 	{
-
-		m_lightBatch.begin();
-		for (auto & L : m_lights) {
-			L.draw(&m_lightBatch);
-		}
-		m_lightBatch.end();
-
 		m_lightPro.use();
+
 		GLint pLoc = m_lightPro.getuniformposition("P");
 		glUniformMatrix4fv(pLoc, 1, GL_FALSE, &Projection[0][0]);
 
+		m_lightBatch.begin();
+
+		m_lights.draw(&m_lightBatch);
+
+		m_lightBatch.end();
+
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 		m_lightBatch.renderBatch();
+
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		m_lightPro.unuse();
 
 	}
+	//font render
+	{
+		Lengine::Camera tempCam;
+		tempCam = m_camera;
+		glm::ivec2 screenDim = tempCam.getScreenDim();
+		tempCam.setposition(glm::vec2(0.0f));
+		tempCam.setscale(1.0f);
+		tempCam.change();
+
+		static int frame = 0;
+		frame++;
+		static std::string fps;
+		std::string tempstr = std::to_string(m_game->getFpsLimiter()->calculateFPS());
+		if (frame > 10) {
+			fps = tempstr;
+			frame = 0;
+		}
+
+		m_program.use();
+
+		glActiveTexture(GL_TEXTURE0);
+		GLint samplerLoc = m_program.getuniformposition("mysampler");
+		glUniform1i(samplerLoc, 0);
+
+		glm::mat4 Projection1 = tempCam.getcameramatrix();
+		GLint pLoc = m_program.getuniformposition("P");
+		glUniformMatrix4fv(pLoc, 1, GL_FALSE, &Projection1[0][0]);
+
+		m_spriteBatch.begin(Lengine::GlyphSortType::BACK_TO_FRONT);
+
+		m_fontBatch.draw(m_spriteBatch, fps.c_str(), glm::vec2(screenDim.x / 2.0f - 19.0f, screenDim.y / 2.0f - 10.0f), glm::vec2(1.0f), 10.0f, Lengine::RED);
+
+		m_spriteBatch.end();
+
+		m_spriteBatch.renderBatch();
+
+		m_program.unuse();
+
+	}
 	//debug render
 	if (m_debuging) {
+
 		m_player.debugDraw(&m_debugRender);
-		for (auto&B : m_boxes) {
-			B.debugDraw(&m_debugRender);
-		}
-		for (auto & L : m_lights) {
-			L.debugDraw(&m_debugRender);
-		}
+		m_boxes.debugDraw(&m_debugRender);
+		m_lights.debugDraw(&m_debugRender, m_debuging);
+
 		m_debugRender.end();
+
 		m_debugRender.render(Projection, 0.5f);
 	}
 
-	if (capture) {
-		buffer.resize(100 * 100 * 24);
-		glReadPixels(950, 650, 100, 100, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
-
-		capture = false;
-	}
+	m_gui.draw();
 }
 
-void GameScreen::cameraTrack() {
-	const float RANGE = 1.0f;
-	static glm::vec2 prePlayerPos = m_player.getCapsule().getpos();
-	glm::vec2 playerPos = m_player.getCapsule().getpos();
-	glm::vec2 playerMove = m_player.getCapsule().getpos()-prePlayerPos;
-	prePlayerPos = playerPos;
+void GameScreen::cameraTrack(){
+
+	glm::vec2 playerMove = m_player.getMove();
+	glm::vec2 playerPos = m_player.getPos();
+
 	if (playerPos.x>-3.0f)
 	{
 		m_camera.offsetPosition(glm::vec2(playerMove.x,0.0f));
@@ -175,4 +219,10 @@ void GameScreen::cameraTrack() {
 		m_camera.offsetPosition(glm::vec2(0.0f, playerMove.y));
 	}
 
+}
+
+bool GameScreen::onBackClicked(const CEGUI::EventArgs& eas) {
+	m_nextScreenIndex = MENU_SCREEN;
+	m_state = Lengine::ScreenState::TO_NEXT;
+	return true;
 }
