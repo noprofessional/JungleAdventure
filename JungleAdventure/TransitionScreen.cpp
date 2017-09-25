@@ -25,3 +25,8 @@ void TransitionScreen::update()
 {
 
 }
+
+void TransitionScreen::draw()
+{
+
+}
