@@ -15,3 +15,8 @@ TransitionScreen::~TransitionScreen()
 void TransitionScreen::build() {
 
 }
+
+void TransitionScreen::destroy()
+{
+
+}
