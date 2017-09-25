@@ -20,3 +20,8 @@ void TransitionScreen::destroy()
 {
 
 }
+
+void TransitionScreen::update()
+{
+
+}
