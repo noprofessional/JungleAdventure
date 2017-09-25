@@ -11,3 +11,7 @@ TransitionScreen::TransitionScreen(Lengine::IMainGame* ownerGame)
 TransitionScreen::~TransitionScreen()
 {
 }
+
+void TransitionScreen::build() {
+
+}
