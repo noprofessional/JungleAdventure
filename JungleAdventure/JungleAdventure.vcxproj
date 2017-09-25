@@ -33,6 +33,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="TextureUVselector.cpp" />
     <ClCompile Include="Tile.cpp" />
+    <ClCompile Include="TransitionScreen.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -49,6 +50,7 @@
     <ClInclude Include="ScreenIdentifier.h" />
     <ClInclude Include="TextureUVselector.h" />
     <ClInclude Include="Tile.h" />
+    <ClInclude Include="TransitionScreen.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E8AEA122-AD29-4638-9EC6-3DE42C6A605A}</ProjectGuid>
