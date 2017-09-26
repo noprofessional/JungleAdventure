@@ -273,3 +273,9 @@ ModelManifest.xml
 *.exe
 *.out
 *.app
+
+#ignore files in test folder
+Test/
+
+#ignore all files in deps folder
+Deps/
