@@ -275,7 +275,7 @@ ModelManifest.xml
 *.app
 
 #ignore files in test folder
-Test/
+/Test/
 
 #ignore all files in deps folder
-Deps/
+/Deps/
