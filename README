@@ -1,2 +1,86 @@
 This is a simple adventure game developed based on SDL, Opengl, ect.
 This is an attemp to study about Opengl and SDL, ect.
+
+## 笔记
+### 一、socket套接字
+为了方便使用，项目将socketFd封装在`SocketBase`类中
+
+  - SocketBase重要的几个接口：
+```C
+	    virtual int onReadSocket() = 0;		//当套接字可读时调用
+	    virtual int onWriteSocket() = 0;	//当套接字可写时调用
+	    virtual uint32_t SendBin(uint32 ip, uint16 port, sox::Marshallable& pPkg, uint32 uri) = 0;//发包
+	    virtual uint32_t SendBin(uint32 ip, uint16 port, const char* data, uint32 len) = 0;//发二进制数据
+```
+  - 以及以下几个成员变量：
+```C
+		SOCKET_TYPE m_iSocketType;	//UDP:0 TCP:1 PIPE:2
+		uint32 m_ip;
+    	uint16 m_iPort;
+		int m_iSocket;				//socketfd
+		SocketHandler *m_pHandler;	//处理套接字
+```
+其中`SocketHandler`是一个纯虚类，定义了一整套对套接字的行为：
+
+  - 接口如下：
+```C
+		class SocketHandler
+		{
+		public:
+			virtual int SocketRead(SocketBase*) = 0;	//监听套接口有新连接
+			virtual int SocketWrite(SocketBase*) =0;	//暂时无用
+			virtual int onDataRecv(const char*, int, SocketBase*) = 0;	//对已收数据处理
+			virtual int onClose(SocketBase*) = 0;
+			virtual void onConnected(SocketBase*) = 0;
+		};
+```
+
+继承自SocketBase的类有两个`TcpSocket`、`UdpSocket`:
+
+  - TcpSocket 中 onReadSocket()的流程如下：
+```C
+		this.onReadSocket()
+			-> if(m_bListenSocket)
+				-> m_pHandler->SocketRead()	//如果是 监听套接口 可读代表 有新的连接 而不是 收到数据
+				-> return
+			-> m_input.pump()	//将接收的数据放入 **m_input缓冲区** 中
+				-> ::recv()		//soket func
+			-> this.onData()	//virtual
+				-> m_pHandler->onDataRecv()	//收到新数据
+```
+  - UdpSocket 中 onReadSocket()的流程如下:
+```C
+		this.onReadSocket()
+			-> ::recvfrom()	//soket func
+			-> m_pHandler->onDataRecv()	//收到新数据
+```
+  - TcpSocket 中 onWriteSocket()的流程如下：
+```C
+		this.onWriteSocket()
+			-> m_output.flush()								//将要写的数据 写入 **m_output缓冲区**
+			-> if(m_output.empty())							//所有数据写完了
+				-> m_pSelector->SetEvent(this, SEL_WRITE, 0)	//取消等待可写事件
+			-> else											//否则
+				-> return										//继续等待可写 -> 在内核缓冲区有空间时 会再次调用此函数
+```
+  - TcpSocket 和 UdpSocket 在可读处不同处理 是因为
+	1. TCP 基于连接，Socket有两种： 一种是 监听套接字 用于接受连接；一种是连接套接字 用于传输数据。
+	2. TCP 的数据是以流的形式传输，因此接收缓冲区需要能够动态扩展；而UDP只需要MTU大小的静态缓冲区
+  - 可写操作不同 是因为
+  	1. TCP 有流量控制 内核输出缓冲区有限 必须等到有空间之后 才能在写入 因此要等待fd可写；而UDP在内核是没有缓冲区概念的只要不超过MTU就会直接交由下一层处理
+
+###二、SelectorEPoll
+SelectorEPoll是对一系列与epoll相关的系统调用的封装: 
+
+  + 在 `SelectorEPoll::Init()` 中调用 `epoll_create()` 
+  + 在 `SelectorEPoll::Run()` 中调用 `epoll_wait()` 
+  + 对 `epoll_ctl()` 的封装如下：
+```C
+		//std::set<SocketBase *> m_setSocket;	//记录了所有在等待的 socket 据此判断是 修改等待事件 还是 等待一个新的fd
+		//remove add events使用自定义标志 SEL_READ=1->等待读 | SEL_WRITE=2->等待写
+		void SelectorEPoll::SetEvent(SocketBase* s, int remove, int add);	//移除remove指定的标志 增加add指定的标志
+		void SelectorEPoll::setEvent(SocketBase* s, int events);			//给与 s event指定的标志
+
+		void SelectorEPoll::removeSocket(SocketBase* s);	//移除对 s 的监听
+```
+
